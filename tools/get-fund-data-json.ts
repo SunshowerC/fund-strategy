@@ -10,10 +10,15 @@ interface FundDataItem {
   bonus: number
 }
 
+interface FundJson {
+  all: Record<string, FundDataItem>
+  bonus: Record<string, FundDataItem>,
+}
+
 /**
  * 拉取数据, 260108
  */
-const getFundData = async (fundCode: string|number, size?: number)=>{
+const getFundData = async (fundCode: string|number, size?: number):Promise<FundJson>=>{
   const page = 1
   const pageSize = size || 1000
   const path = `http://api.fund.eastmoney.com/f10/lsjz?callback=jQuery&fundCode=${fundCode}&pageIndex=${page}&pageSize=${pageSize}&startDate=&endDate=&_=${Date.now()}`
@@ -39,24 +44,33 @@ const getFundData = async (fundCode: string|number, size?: number)=>{
   // 日增长率 JZZZL   growthRate
   // 分红送配 FHFCZ  bonus
 
-  console.log(historyVal[0])
-  return historyVal.map(item => {
-    return {
+  return historyVal.reduce((result, item) => {
+    const curFundObj: FundDataItem = {
       date: item.FSRQ,
       val: item.DWJZ,
       accumulatedVal: item.LJJZ,
       growthRate: item.JZZZL,
       bonus: item.FHFCZ
-    } as FundDataItem
+    }
+    result.all[curFundObj.date] = curFundObj
+    
+    if(curFundObj.bonus) {
+      result.bonus[curFundObj.date] = curFundObj
+    }
+    
+    return result
+  }, {
+    bonus: {},
+    all: {}
   })
 }
 
 /**
  * 保存为 json 文件
  */
-const genrateFundJsonFile = (list:FundDataItem[], filePath: string)=>{
+const genrateFundJsonFile = (fundJson:FundJson, filePath: string)=>{
   try {
-    fs.writeFileSync(filePath, JSON.stringify({list}))
+    fs.writeFileSync(filePath, JSON.stringify(fundJson))
   } catch (err) {
     console.error(err)
   }
@@ -64,8 +78,8 @@ const genrateFundJsonFile = (list:FundDataItem[], filePath: string)=>{
 
 
 const main = async ()=>{
-  const list = await getFundData('260108')
-  genrateFundJsonFile(list, './static/景顺长城260108.json')
+  const list = await getFundData('260108', 1000)
+  genrateFundJsonFile(list, './static/景顺长城新兴成长混合260108.json')
 }
 main()
 
