@@ -3,8 +3,8 @@
  * 投资快照类 描述了投资过程中，某一天的状态
  **************************/
 
-import { FundJson, FundDataItem } from "../../tools/get-fund-data-json"
-import { dateFormat, roundToFix } from "../utils/common"
+import { FundJson, FundDataItem } from "../../../tools/get-fund-data-json"
+import { dateFormat, roundToFix } from "../common"
 
 interface FundTransaction {
   /** 
@@ -25,10 +25,10 @@ interface FundTransaction {
  * 基金的长期投资计划
  */
 class InvestmentStrategy {
-  totalAmount: number // 初始资本，存量
-  salary: number // 工资，每月增量资金
+  totalAmount!: number // 初始资本，存量
+  salary!: number // 工资，每月增量资金
   
-  fixedInvestment: {
+  fixedInvestment!: {
     amount: number // 每次定投金额
     dateOrWeek: number // 每周周几，每月几号定投
     period: 'weekly' | 'monthly'   // 每周，每月，每 2 周定投
@@ -37,22 +37,22 @@ class InvestmentStrategy {
   /**
    * 当前投资的状态
    */
-  latestInvestment: InvestDateSnapshot
+  latestInvestment!: InvestDateSnapshot
 
-  beginDate: string // 开始投资的日子
-  fundJson: FundJson // 基金源数据
+  beginDate!: string // 开始投资的日子
+  fundJson!: FundJson // 基金源数据
   
-  buyFeeRate: number // 买入的手续费， 一般是 0.15%
-  sellFeeRate: number // 卖出的手续费， 一般是 0.5%
+  buyFeeRate!: number // 买入的手续费， 一般是 0.15%
+  sellFeeRate!: number // 卖出的手续费， 一般是 0.5%
   
   // 止盈点， 
-  stop: {
+  stop!: {
     rate: number  // 基金涨了 5 % 就止盈一部分
     minAmount: number // 止盈的最低 持仓临界线，如低于 10% 
   }
 
   // 做 T 时的配置信息
-  tInvest: {
+  tInvest!: {
     rate: number // 自上次止盈后， 降幅 rate 幅度后 做 T
     amount: number // 补仓 份额 （买）
   }
@@ -60,7 +60,7 @@ class InvestmentStrategy {
   /**
    * 该基金策略下运行的每个交易日的数据
    */
-  data: InvestDateSnapshot[]
+  data!: InvestDateSnapshot[]
 }
 
 /**
@@ -75,7 +75,7 @@ class InvestDateSnapshot {
   /** 
    * 持仓成本 单价
    * */ 
-  cost: number // 每天操作后计算赋值
+  cost!: number // 每天操作后计算赋值
    
 
   /**
@@ -88,7 +88,7 @@ class InvestDateSnapshot {
   /** 
    * 持仓份额  
    * */
-  portion:number // 每天操作后计算赋值
+  portion!:number // 每天操作后计算赋值
    
 
   /**
@@ -114,7 +114,7 @@ class InvestDateSnapshot {
    * 资金弹药，还剩下多少钱可以加仓，可用资金
    * = 上一个交易日的 leftAmount + (今日加减仓)
    */
-  leftAmount:number 
+  leftAmount!:number 
   
   /**
    * 总资产 = 资金弹药 +  持仓金额
@@ -130,10 +130,10 @@ class InvestDateSnapshot {
     const fixedInvestment = this.fundStrategy.fixedInvestment
     if(fixedInvestment.period === 'monthly') {
       return now.getDate() === fixedInvestment.dateOrWeek
-    }
-
-    if(fixedInvestment.period === 'weekly') {
+    } else if(fixedInvestment.period === 'weekly') {
       return now.getDay() === fixedInvestment.dateOrWeek
+    } else {
+      return false 
     }
   }
 
@@ -142,10 +142,10 @@ class InvestDateSnapshot {
    */
   curFund: FundDataItem 
 
-  fixedBuy: FundTransaction|null// 被动定投买入份额，金额。 金额 = 份额 * 基金净值
-  profitSell: FundTransaction|null // 被动触发条件 卖出止盈的，份额，金额，
-  buyWhenDecline: FundTransaction|null // 主动补仓买入份额，金额
-  sellWhenRise: FundTransaction|null // 卖出补仓做 T 的份额，金额，
+  fixedBuy!: FundTransaction|null// 被动定投买入份额，金额。 金额 = 份额 * 基金净值
+  profitSell!: FundTransaction|null // 被动触发条件 卖出止盈的，份额，金额，
+  buyWhenDecline!: FundTransaction|null // 主动补仓买入份额，金额
+  sellWhenRise!: FundTransaction|null // 卖出补仓做 T 的份额，金额，
 
   /**
    * @param options 
