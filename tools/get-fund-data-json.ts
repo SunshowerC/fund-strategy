@@ -2,7 +2,7 @@
 import axios from 'axios'
 import * as fs from 'fs'
 
-interface FundDataItem {
+export interface FundDataItem {
   date: string
   val: number
   accumulatedVal: number
@@ -10,7 +10,7 @@ interface FundDataItem {
   bonus: number
 }
 
-interface FundJson {
+export interface FundJson {
   all: Record<string, FundDataItem>
   bonus: Record<string, FundDataItem>,
 }
