@@ -5,7 +5,7 @@ export const dateFormat = (dateInput, format = 'yyyy-MM-dd') => {
   const dateObj = new Date(dateInput)
 
   if (!dateObj.getFullYear()) {
-    console.error(dateInput, dateObj)
+    console.log(dateInput, dateObj)
     return dateInput
   }
 

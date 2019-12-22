@@ -69,11 +69,11 @@ const getFundData = async (fundCode: string|number, size?: number):Promise<FundJ
  * 保存为 json 文件
  */
 const genrateFundJsonFile = (fundJson:FundJson, filePath: string)=>{
-  try {
+  // try {
     fs.writeFileSync(filePath, JSON.stringify(fundJson))
-  } catch (err) {
-    console.error(err)
-  }
+  // } catch (err) {
+  //   console.error(err)
+  // }
 }
 
 

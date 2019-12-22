@@ -1,0 +1,10 @@
+defaultSeverity: error
+extends:
+  - tslint-react
+  - tslint-eslint-rules
+rules:
+  eofline: true
+  no-console: false
+  no-construct: true
+  no-debugger: false
+  no-reference: true
