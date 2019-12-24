@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
+    "resolveJsonModule": true,
     "noImplicitAny": false,
     "target": "esnext",
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "importHelpers": true,
     "jsx": "react",

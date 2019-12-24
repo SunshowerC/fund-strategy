@@ -1,7 +1,7 @@
 import lodash from 'lodash'
 
 
-export const dateFormat = (dateInput, format = 'yyyy-MM-dd') => {
+export const dateFormat = (dateInput, format = 'yyyy-MM-dd'):string => {
   const dateObj = new Date(dateInput)
 
   if (!dateObj.getFullYear()) {

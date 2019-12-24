@@ -18,7 +18,7 @@ const config: IConfig =  {
       antd: true,
       dva: true,
       dynamicImport: false,
-      title: 'umi-base-antd-tpl',
+      title: '基金定投策略分析',
       dll: true,
       
       routes: {

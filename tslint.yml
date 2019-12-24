@@ -8,3 +8,6 @@ rules:
   no-construct: true
   no-debugger: false
   no-reference: true
+  jsx-boolean-value: false
+  jsx-no-multiline-js: false # 允许 多行 js
+  
