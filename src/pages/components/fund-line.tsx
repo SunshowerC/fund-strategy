@@ -1,4 +1,13 @@
 
+/* 
+图表
+1. 总资产 totalAmount
+2. 基金资产 fundAmount
+3. 剩余可用资金 leftAmount 【是否爆仓】
+4. 基金净值 fundVal + 买入红点，卖出蓝点
+5. 收益率profitRate + 累计盈亏 profit 
+6. 
+*/
 import React, { Component } from 'react';
 import {
   G2,
@@ -21,8 +30,8 @@ import { FundJson } from 'tools/get-fund-data-json';
 
 const investment = new InvestmentStrategy({
   // fundJson: FundDataJson as FundJson,
-  range: ['2019-01-01', '2019-12-01'],
-  totalAmount: 10000,
+  // range: ['2019-01-01', '2019-12-01'],
+  totalAmount: 20000,
   salary: 0,
   fixedInvestment: {
     amount: 300,
@@ -43,6 +52,10 @@ const investment = new InvestmentStrategy({
   fundJson: FundDataJson as any as FundJson
 })
 
+investment.buy(10000, '2019-01-01')
+// .buy(10000, '2019-06-01')
+.buy(0, '2019-11-01')
+console.log('investment', investment)
 export class FundLine extends Component {
   render() {
     // const data = [
@@ -55,10 +68,14 @@ export class FundLine extends Component {
 
     const investmentData = investment.data.map(item=>{
       return {
+        origin: item,
         totalAmount: item.totalAmount,
         leftAmount: item.leftAmount,
         date: item.date,
-        profitRate: item.profitRate
+        profit: item.profit,
+        profitRate: item.profitRate,
+        fundAmount: item.fundAmount,
+        fundVal: Number(item.curFund.val)
       }
     })
     let  data = investmentData
@@ -71,16 +88,29 @@ export class FundLine extends Component {
         range: [0, 1] 
       }
     };
+    const keyTextMap = {
+      totalAmount: '总资产',
+      leftAmount: '剩余可用资金',
+      profitRate: '收益率',
+      profit: '累计收益',
+      fundAmount: '基金持有金额',
+      fundVal: '基金净值'
+    }
+    console.log('源数据', data)
     return (
       <div>
         <Chart height={400} data={data}  forceFit>
-          <Legend />
+          <Legend 
+            itemFormatter={val => {
+              return keyTextMap[val]
+            }}
+          />
           <Axis name="date" />
           <Axis
-            name="totalAmount"
-            label={{
-              formatter: val => `${val} 元`
-            }}
+            name="fundAmount"
+            // label={{
+            //   formatter: val => `${val} 元`
+            // }}
           />
           <Tooltip
             crosshairs={{
@@ -92,18 +122,13 @@ export class FundLine extends Component {
             position="date*totalAmount" // x 轴是 month , y 是 temperature
             size={2}
           />
-          <Geom
+          {/* <Geom
             type="line"
-            position="date*leftAmount" // x 轴是 month , y 是 temperature
+            position="date*fundAmount" // x 轴是 month , y 是 temperature
             size={2}
             color="#ff0000"
-          />
-          <Geom
-            type="line"
-            position="date*profitRate" // x 轴是 month , y 是 temperature
-            size={2}
-            color="#00ff00"
-          />
+          /> */}
+          
           {/* <Geom
             type="point"
             position="date*totalAmount"
@@ -114,6 +139,80 @@ export class FundLine extends Component {
               lineWidth: 1
             }}
           /> */}
+        </Chart>
+
+
+        <Chart height={400} data={data}  forceFit>
+          <Legend 
+            itemFormatter={val => {
+              return keyTextMap[val]
+            }}
+          />
+          <Axis name="date" />
+           
+          <Tooltip
+            crosshairs={{
+              type: "y"
+            }}
+          />
+          
+          <Geom
+            type="line"
+            position="date*fundAmount" // x 轴是 month , y 是 temperature
+            size={2}
+          />
+          
+        </Chart>
+
+        <Chart height={400} data={data}  forceFit>
+          <Legend 
+            itemFormatter={val => {
+              return keyTextMap[val]
+            }}
+          />
+          <Axis name="date" />
+           
+          <Tooltip
+            crosshairs={{
+              type: "y"
+            }}
+          />
+          
+          <Geom
+            type="line"
+            position="date*fundVal" // x 轴是 month , y 是 temperature
+            size={2}
+          />
+          
+        </Chart>
+
+        <Chart height={400} data={data}  forceFit>
+          <Legend 
+            itemFormatter={val => {
+              return keyTextMap[val]
+            }}
+          />
+          <Axis name="date" />
+           
+          <Tooltip
+            crosshairs={{
+              type: "y"
+            }}
+          />
+          
+          <Geom
+            type="line"
+            position="date*profitRate" // x 轴是 month , y 是 temperature
+            size={2}
+          />
+
+          <Geom
+            type="line"
+            position="date*profit" // x 轴是 month , y 是 temperature
+            size={2}
+            color="#ff0000"
+          />
+          
         </Chart>
       </div>
     );
