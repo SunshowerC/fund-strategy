@@ -1,12 +1,14 @@
 
 /* 
 图表
-1. 总资产 totalAmount
-2. 基金资产 fundAmount
-3. 剩余可用资金 leftAmount 【是否爆仓】
-4. 基金净值 fundVal + 买入红点，卖出蓝点
-5. 收益率profitRate + 累计盈亏 profit 
-6. 
+done 1. 总资产 totalAmount  基金资产 fundAmount 3. 剩余可用资金 leftAmount 【是否爆仓】
+
+
+done 4. 基金净值 fundVal + 买入红点，卖出蓝点
+done 5. 收益率profitRate + 累计盈亏 profit 
+6. TODO: 仓位 = 资金资产 / 总资产
+
+7. 结果值：平均年化收益率， 最大回撤
 */
 import React, { Component } from 'react';
 import {
@@ -27,6 +29,9 @@ import {
 import FundDataJson from '@/utils/fund-stragegy/static/景顺长城新兴成长混合260108.json'
 import { InvestmentStrategy } from '@/utils/fund-stragegy/index.ts';
 import { FundJson } from 'tools/get-fund-data-json';
+import { TotalAmountChart, AmountProp } from './total-amount'
+import { FundValChart } from './fund-val'
+import { RateChart } from './rate'
 
 const investment = new InvestmentStrategy({
   // fundJson: FundDataJson as FundJson,
@@ -53,10 +58,22 @@ const investment = new InvestmentStrategy({
 })
 
 investment.buy(10000, '2019-01-01')
-// .buy(10000, '2019-06-01')
-.buy(0, '2019-11-01')
+  .buy(5000, '2019-06-01')
+  .buy(5000, '2019-08-01')
+  .buy(0, '2019-11-01')
 console.log('investment', investment)
 export class FundLine extends Component {
+
+  commonProp: AmountProp['commonProp'] = {
+    chart: {
+      forceFit: true,
+      height: 450, 
+      padding: [
+        20, 80, 100, 80
+      ]
+    }
+  }
+
   render() {
     // const data = [
     //   {
@@ -66,7 +83,7 @@ export class FundLine extends Component {
     //   }
     // ];
 
-    const investmentData = investment.data.map(item=>{
+    const investmentData = investment.data.map(item => {
       return {
         origin: item,
         totalAmount: item.totalAmount,
@@ -78,14 +95,14 @@ export class FundLine extends Component {
         fundVal: Number(item.curFund.val)
       }
     })
-    let  data = investmentData
+    let data = investmentData
     const cols = {
       date: {
         // x 轴的比例尺
         // 如果是 [0,1]: 在视图内展示所有数据
         // 如果是 [0,2]: 在2倍视图内展示所有数据
         // [0, 0.5]: 在 0.5 倍视图内展示所有数据
-        range: [0, 1] 
+        range: [0, 1]
       }
     };
     const keyTextMap = {
@@ -98,122 +115,15 @@ export class FundLine extends Component {
     }
     console.log('源数据', data)
     return (
-      <div>
-        <Chart height={400} data={data}  forceFit>
-          <Legend 
-            itemFormatter={val => {
-              return keyTextMap[val]
-            }}
-          />
-          <Axis name="date" />
-          <Axis
-            name="fundAmount"
-            // label={{
-            //   formatter: val => `${val} 元`
-            // }}
-          />
-          <Tooltip
-            crosshairs={{
-              type: "y"
-            }}
-          />
-          <Geom
-            type="line"
-            position="date*totalAmount" // x 轴是 month , y 是 temperature
-            size={2}
-          />
-          {/* <Geom
-            type="line"
-            position="date*fundAmount" // x 轴是 month , y 是 temperature
-            size={2}
-            color="#ff0000"
-          /> */}
-          
-          {/* <Geom
-            type="point"
-            position="date*totalAmount"
-            size={2}
-            shape={"circle"}
-            style={{
-              stroke: "#fff",
-              lineWidth: 1
-            }}
-          /> */}
-        </Chart>
+      <div style={{
+        margin: "0 auto",
+        maxWidth: '1200px'
+      }}>
+        <FundValChart data={data} textMap={keyTextMap} commonProp={this.commonProp}  />
 
+        <TotalAmountChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />
 
-        <Chart height={400} data={data}  forceFit>
-          <Legend 
-            itemFormatter={val => {
-              return keyTextMap[val]
-            }}
-          />
-          <Axis name="date" />
-           
-          <Tooltip
-            crosshairs={{
-              type: "y"
-            }}
-          />
-          
-          <Geom
-            type="line"
-            position="date*fundAmount" // x 轴是 month , y 是 temperature
-            size={2}
-          />
-          
-        </Chart>
-
-        <Chart height={400} data={data}  forceFit>
-          <Legend 
-            itemFormatter={val => {
-              return keyTextMap[val]
-            }}
-          />
-          <Axis name="date" />
-           
-          <Tooltip
-            crosshairs={{
-              type: "y"
-            }}
-          />
-          
-          <Geom
-            type="line"
-            position="date*fundVal" // x 轴是 month , y 是 temperature
-            size={2}
-          />
-          
-        </Chart>
-
-        <Chart height={400} data={data}  forceFit>
-          <Legend 
-            itemFormatter={val => {
-              return keyTextMap[val]
-            }}
-          />
-          <Axis name="date" />
-           
-          <Tooltip
-            crosshairs={{
-              type: "y"
-            }}
-          />
-          
-          <Geom
-            type="line"
-            position="date*profitRate" // x 轴是 month , y 是 temperature
-            size={2}
-          />
-
-          <Geom
-            type="line"
-            position="date*profit" // x 轴是 month , y 是 temperature
-            size={2}
-            color="#ff0000"
-          />
-          
-        </Chart>
+        <RateChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />
       </div>
     );
   }

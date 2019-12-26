@@ -5,3 +5,15 @@ html, body, #root {
 body {
   margin: 0;
 }
+
+
+.main-title {
+  font-size: 24px;
+  color: #333;
+  padding: 10px;
+}
+
+.sub-title {
+  font-size: 16px;
+  color: #bbb;
+}
