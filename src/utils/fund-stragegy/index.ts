@@ -117,6 +117,7 @@ export class InvestmentStrategy {
     const dateStr = dateFormat(date)
     let cur = new Date(date).getTime()
 
+    // 填充起始时间和 终止时间之间的空白数据
     if(this.latestInvestment) {
       let latestInvestDate = new Date(this.latestInvestment.date).getTime()
       latestInvestDate += ONE_DAY
@@ -202,9 +203,9 @@ export class InvestDateSnapshot {
    * */
   get profitRate():number {
     if(this.cost === 0) {
-      return 1
+      return 0
     }
-    return roundToFix( this.curFund.val / this.cost, 4 )
+    return roundToFix( this.curFund.val / this.cost, 4 ) - 1
   }
   /**
    * 资金弹药，还剩下多少钱可以加仓，可用资金
@@ -238,6 +239,27 @@ export class InvestDateSnapshot {
    */
   curFund: FundDataItem 
 
+  /**
+   * 基金在区间内的涨幅
+   */
+  get fundGrowthRate():number {
+    if(this.fundStrategy.data[0]) {
+      // 起始基金净值
+      const firstFundVal = this.fundStrategy.data[0].curFund.val
+      return roundToFix((this.curFund.val - firstFundVal) / firstFundVal, 4)
+    } else {
+      return 0
+    }
+  }
+
+  /**
+   * 当天买入 金额（不计手续费）
+   */
+  totalBuyAmount: number = 0
+  /**
+   * 当天卖出的金额
+   */
+  totalSellAmount: number = 0
   fixedBuy!: FundTransaction|null// 被动定投买入份额，金额。 金额 = 份额 * 基金净值
   profitSell!: FundTransaction|null // 被动触发条件 卖出止盈的，份额，金额，
   buyWhenDecline!: FundTransaction|null // 主动补仓买入份额，金额
@@ -360,7 +382,7 @@ export class InvestDateSnapshot {
     // if(amount > 0) {
     //   debugger
     // }
-    
+    this.totalBuyAmount += amount
     const buyTxn = this.fulfillBuyTxn({
       amount
     })
@@ -398,6 +420,7 @@ export class InvestDateSnapshot {
 
     // 卖出后加到 剩余资产中
     this.leftAmount = latestInvestment.leftAmount + sellTxn.amount
+    this.totalSellAmount += sellTxn.amount
   }
 
 }

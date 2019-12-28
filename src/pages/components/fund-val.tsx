@@ -18,36 +18,60 @@ import {
   ChartProps
 } from "bizcharts";
 import React from 'react';
-import { COLOR_PLATE_16 } from '@/utils/color';
+import { COLOR_PLATE_16, COLOR_PLATE_8 } from '@/utils/color';
+import { roundToFix } from '@/utils/common';
 
 export class FundValChart extends Component<AmountProp> {
   getTooltipFormat(text: string) {
-    return [text, (value: any) => ({
-      name: this.props.textMap[text],
-      value,
-    })] as [string, any]
+    if(text === 'profitRate') {
+      return [text, (profitRate: any) => ({
+        name: this.props.textMap[text],
+        value: roundToFix(profitRate * 100, 2)  + '%'
+      })] as [string, any]
+    }
+    return [text, (fundGrowthRate, totalBuyAmount) => {
+      const buyTip =totalBuyAmount ? `(${this.props.textMap['totalBuyAmount']} ${totalBuyAmount})` : ''
+      return {
+        name: this.props.textMap['fundGrowthRate'] ,
+        value: roundToFix(fundGrowthRate * 100, 2)  + '%' + buyTip,
+      }
+    }] as [string, any]
   }
 
+  xy = {
+    x: 'date',
+    y: 'fundGrowthRate'
+  }
 
   render() {
     const { data, textMap, commonProp } = this.props
     const commonChartProp = commonProp.chart
-
+    const { x, y } = this.xy
+    const scale = {
+      profitRate: {
+        min: 0,
+        max: 1
+      },
+      fundGrowthRate: {
+        min: 0,
+        max: 1
+      }
+    }
     return <div >
       <h1 className="main-title" >
-        基金净值趋势图
+        基金业绩走势
       </h1>
-      {/* <h2 className="sub-title"  >
-        设置左右刻度数tickCount相同
-      </h2> */}
-      <Chart  data={data}  {...commonChartProp} >
+      {/* TODO: 买入卖出点点 */}
+      
+      <Chart data={data} scale={scale}  {...commonChartProp} >
         <Legend
           itemFormatter={val => {
             return textMap[val]
           }}
         />
-        <Axis name="date" />
-        <Axis name="fundVal" />
+        <Axis name={x} />
+        <Axis name="fundGrowthRate" />
+        <Axis name="profitRate" visible={false} />
 
         <Tooltip
           crosshairs={{
@@ -56,23 +80,44 @@ export class FundValChart extends Component<AmountProp> {
         />
         <Geom
           type="line"
-          position="date*fundVal"
+          position={`${x}*${y}`}
           size={2}
           color={COLOR_PLATE_16[0]}
-          tooltip={this.getTooltipFormat('fundVal')}
+          tooltip={this.getTooltipFormat(y + '*totalBuyAmount')}
         />
-         
-        
-        {/* <Geom
-          type="point"
-          position="date*totalAmount"
+
+        <Geom
+          type="line"
+          position="date*profitRate"
           size={2}
+          color={COLOR_PLATE_16[2]}
+          tooltip={this.getTooltipFormat('profitRate')}
+        />
+
+        <Geom
+          type="point"
+          position={`${x}*${y}`}
+          size={4}
           shape={"circle"}
-          style={{
-            stroke: "#fff",
-            lineWidth: 1
-          }} 
-        />*/}
+          opacity={['totalBuyAmount', (totalBuyAmount) => {
+            if (totalBuyAmount === 0) {
+              return 0
+            }
+            return 1
+          }]}
+          tooltip={this.getTooltipFormat(y + '*totalBuyAmount')}
+          style={[`totalBuyAmount`, {
+            lineWidth: 2,
+            fill(totalBuyAmount: number) {
+              if (totalBuyAmount > 0) {
+                return '#ff3000'
+              } else {
+                return "#fff"
+              }
+            },
+            stroke: "#fff"
+          }]}
+        />
       </Chart>
     </div>
   }

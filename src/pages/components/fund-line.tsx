@@ -57,10 +57,10 @@ const investment = new InvestmentStrategy({
   fundJson: FundDataJson as any as FundJson
 })
 
-investment.buy(10000, '2019-01-01')
+investment.buy(10000, '2018-12-27')
   .buy(5000, '2019-06-01')
   .buy(5000, '2019-08-01')
-  .buy(0, '2019-11-01')
+  .buy(0, '2019-12-27')
 console.log('investment', investment)
 export class FundLine extends Component {
 
@@ -92,7 +92,9 @@ export class FundLine extends Component {
         profit: item.profit,
         profitRate: item.profitRate,
         fundAmount: item.fundAmount,
-        fundVal: Number(item.curFund.val)
+        fundVal: Number(item.curFund.val),
+        fundGrowthRate: item.fundGrowthRate,
+        totalBuyAmount: item.totalBuyAmount
       }
     })
     let data = investmentData
@@ -111,7 +113,9 @@ export class FundLine extends Component {
       profitRate: '收益率',
       profit: '累计收益',
       fundAmount: '基金持有金额',
-      fundVal: '基金净值'
+      fundVal: '基金净值',
+      fundGrowthRate: '基金涨幅',
+      totalBuyAmount: '买入金额'
     }
     console.log('源数据', data)
     return (
