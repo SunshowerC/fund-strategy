@@ -56,20 +56,27 @@ export class RateChart extends Component<AmountProp> {
           }}
         />
         
-        <Geom
+        {/* <Geom
           type="line"
           position="date*profitRate"
           size={2}
           color={COLOR_PLATE_16[2]}
           tooltip={this.getTooltipFormat('profitRate')}
-        />
+        /> */}
          
-         <Geom
+         {/* <Geom
           type="line"
           position="date*profit"
           size={2}
           color={COLOR_PLATE_16[4]}
           tooltip={this.getTooltipFormat('profit')}
+        /> */}
+        <Geom
+          type="line"
+          position="date*accumulatedProfit"
+          size={2}
+          color={COLOR_PLATE_16[5]}
+          tooltip={this.getTooltipFormat('accumulatedProfit')}
         />
          
       </Chart>

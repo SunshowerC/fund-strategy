@@ -141,6 +141,38 @@ export class InvestmentStrategy {
     return this
   }
 
+  sell(amount:number|'all', date: any) {
+    const dateStr = dateFormat(date)
+    let cur = new Date(date).getTime()
+
+    // 填充起始时间和 终止时间之间的空白数据
+    if(this.latestInvestment) {
+      let latestInvestDate = new Date(this.latestInvestment.date).getTime()
+      latestInvestDate += ONE_DAY
+      while(cur > latestInvestDate) {
+        const invest = new InvestDateSnapshot({
+          fundStrategy: this,
+          date: dateFormat(latestInvestDate)
+        }).sell({amount: 0})
+
+        this.data.push(invest)
+        latestInvestDate += ONE_DAY
+      }
+    }  
+    const invest = new InvestDateSnapshot({
+      fundStrategy: this,
+      date: dateStr
+    })
+    if(amount === 'all') {
+      invest.sell('all')
+    } else {
+      invest.sell({amount})
+    }
+
+    this.data.push(invest)
+    return this
+  }
+
   /**
    * 根据日期获取对应的基金信息
    */
@@ -205,8 +237,37 @@ export class InvestDateSnapshot {
     if(this.cost === 0) {
       return 0
     }
-    return roundToFix( this.curFund.val / this.cost, 4 ) - 1
+    return roundToFix( this.curFund.val / this.cost - 1, 4 ) 
   }
+
+  /**
+   * 赎回了的收益
+   */
+  returnedProfit!: number
+
+  /**
+   * 总共买入的金额 
+   * 需要手动赋值初始化
+   */
+  totalBuyAmount!: number
+
+  /**
+   * 总共卖出的金额 
+   * 需要手动赋值初始化
+   */
+  totalSellAmount!: number
+
+  /**
+   * 累计收益
+   */
+  get totalProfit() {
+    return this.returnedProfit + this.profit
+  }
+
+  /**
+   * 累计成本， 用于算累计收益率 https://sspai.com/post/53061
+   */
+
   /**
    * 资金弹药，还剩下多少钱可以加仓，可用资金
    * = 上一个交易日的 leftAmount + (今日加减仓)
@@ -219,6 +280,15 @@ export class InvestDateSnapshot {
   get totalAmount(): number  {
     return roundToFix( this.leftAmount + this.fundAmount , 2)
   }
+
+  /**
+   * 累计收益
+   */
+  get accumulatedProfit() {
+    return roundToFix( this.fundAmount - this.totalBuyAmount + this.totalSellAmount, 2)
+  }
+
+
   
   date: string // 当前日期
 
@@ -255,11 +325,11 @@ export class InvestDateSnapshot {
   /**
    * 当天买入 金额（不计手续费）
    */
-  totalBuyAmount: number = 0
+  dateBuyAmount: number = 0
   /**
    * 当天卖出的金额
    */
-  totalSellAmount: number = 0
+  dateSellAmount: number = 0
   fixedBuy!: FundTransaction|null// 被动定投买入份额，金额。 金额 = 份额 * 基金净值
   profitSell!: FundTransaction|null // 被动触发条件 卖出止盈的，份额，金额，
   buyWhenDecline!: FundTransaction|null // 主动补仓买入份额，金额
@@ -278,13 +348,20 @@ export class InvestDateSnapshot {
     if(!this.fundStrategy.latestInvestment) {
       this.portion = 0
       this.cost = 0
+      this.returnedProfit = 0
+      this.totalBuyAmount = 0
+      this.totalSellAmount = 0
       this.leftAmount = this.fundStrategy.totalAmount
     } else {
       const latestInvestment = this.fundStrategy.latestInvestment
       this.portion = latestInvestment.portion
       this.cost = latestInvestment.cost
       this.leftAmount = latestInvestment.leftAmount
+      this.totalBuyAmount = latestInvestment.totalBuyAmount
+      this.totalSellAmount = latestInvestment.totalSellAmount
+      this.returnedProfit = latestInvestment.returnedProfit
     }
+
     this.operate()
   }
 
@@ -382,7 +459,12 @@ export class InvestDateSnapshot {
     // if(amount > 0) {
     //   debugger
     // }
+    if(amount <= 0) {
+      return this
+    }
     this.totalBuyAmount += amount
+    this.dateBuyAmount += amount
+
     const buyTxn = this.fulfillBuyTxn({
       amount
     })
@@ -408,19 +490,48 @@ export class InvestDateSnapshot {
    * 卖出基金
    * @param txn 卖出信息
    */
-  sell(txn:Partial<FundTransaction>) {
+  sell(txn:Partial<FundTransaction>|'all') {
+    
+    // 上一次快照， 
+    const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
+      portion : 0,
+      cost: 0,
+      costAmount: 0,
+      leftAmount: this.fundStrategy.totalAmount
+    }
+
+    if(txn === 'all') {
+      txn = {
+        portion: latestInvestment.portion
+      }
+    }
+
+    if(txn && (txn.amount! <= 0 || txn.portion! <= 0)) {
+      return this
+    }
     const sellTxn = this.fulfillSellTxn(txn)
-    const latestInvestment = this.fundStrategy.latestInvestment
+    // 此时的 this.fundStrategy.latestInvestment 其实就是 this, 因为 sell() 执行前， latestInvestment 就已经被赋值了
+    
 
     // 最新份额 = 上一次的 份额 - 最新卖出的份额
     this.portion = latestInvestment.portion - sellTxn.portion
+    if(this.portion < 0) {
+      throw new TypeError('卖出份额不能比持有份额高')
+    }
 
     // 卖出行为后，持仓成本 = (之前持仓成本金额 - 卖出金额) / 基金总份额
-    this.cost = (latestInvestment.costAmount - sellTxn.amount)  / this.portion
+    // this.cost = (latestInvestment.costAmount - sellTxn.amount)  / this.portion
+    this.cost = latestInvestment.cost
+    // 算法参考 https://www.zhihu.com/question/265056524
+    this.returnedProfit = latestInvestment.returnedProfit +  sellTxn.amount / (1/this.profitRate + 1)
 
     // 卖出后加到 剩余资产中
-    this.leftAmount = latestInvestment.leftAmount + sellTxn.amount
-    this.totalSellAmount += sellTxn.amount
+    this.leftAmount = roundToFix( latestInvestment.leftAmount + sellTxn.amount, 2 )
+    
+    this.totalSellAmount = roundToFix( this.totalSellAmount + sellTxn.amount, 2)
+    this.dateSellAmount = roundToFix(this.dateSellAmount + sellTxn.amount, 2) 
+
+    return this
   }
 
 }

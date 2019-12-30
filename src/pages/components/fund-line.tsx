@@ -36,7 +36,7 @@ import { RateChart } from './rate'
 const investment = new InvestmentStrategy({
   // fundJson: FundDataJson as FundJson,
   // range: ['2019-01-01', '2019-12-01'],
-  totalAmount: 20000,
+  totalAmount: 10000,
   salary: 0,
   fixedInvestment: {
     amount: 300,
@@ -57,10 +57,16 @@ const investment = new InvestmentStrategy({
   fundJson: FundDataJson as any as FundJson
 })
 
-investment.buy(10000, '2018-12-27')
-  .buy(5000, '2019-06-01')
+investment
+  .buy(0, '2018-12-26')
+  .buy(5000, '2018-12-27')
+  .sell(3000, '2019-03-01')
   .buy(5000, '2019-08-01')
-  .buy(0, '2019-12-27')
+  .sell(2000, '2019-09-01')
+  // .sell('all', '2019-03-02')
+  // .buy(5000, '2019-06-01')
+
+  // .buy(0, '2019-03-02')
 console.log('investment', investment)
 export class FundLine extends Component {
 
@@ -94,7 +100,9 @@ export class FundLine extends Component {
         fundAmount: item.fundAmount,
         fundVal: Number(item.curFund.val),
         fundGrowthRate: item.fundGrowthRate,
-        totalBuyAmount: item.totalBuyAmount
+        dateBuyAmount: item.dateBuyAmount,
+        dateSellAmount: item.dateSellAmount,
+        accumulatedProfit: item.accumulatedProfit
       }
     })
     let data = investmentData
@@ -110,12 +118,15 @@ export class FundLine extends Component {
     const keyTextMap = {
       totalAmount: '总资产',
       leftAmount: '剩余可用资金',
-      profitRate: '收益率',
-      profit: '累计收益',
+      profitRate: '持有收益率',
+      profit: '持有收益',
+      totalProfit: '累计收益',
       fundAmount: '基金持有金额',
       fundVal: '基金净值',
       fundGrowthRate: '基金涨幅',
-      totalBuyAmount: '买入金额'
+      dateBuyAmount: '买入金额',
+      dateSellAmount: '卖出金额',
+      accumulatedProfit: '累计收益',
     }
     console.log('源数据', data)
     return (

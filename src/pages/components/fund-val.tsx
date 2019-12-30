@@ -23,17 +23,18 @@ import { roundToFix } from '@/utils/common';
 
 export class FundValChart extends Component<AmountProp> {
   getTooltipFormat(text: string) {
-    if(text === 'profitRate') {
-      return [text, (profitRate: any) => ({
-        name: this.props.textMap[text],
-        value: roundToFix(profitRate * 100, 2)  + '%'
+    if(text === 'profitRate*profit') {
+      return [text, (profitRate: any, profit: number) => ({
+        name: '持有收益',
+        value: roundToFix(profitRate * 100, 2)  + '%' + `(${profit}元)`
       })] as [string, any]
     }
-    return [text, (fundGrowthRate, totalBuyAmount) => {
-      const buyTip =totalBuyAmount ? `(${this.props.textMap['totalBuyAmount']} ${totalBuyAmount})` : ''
+    return [text, (fundGrowthRate, dateBuyAmount, dateSellAmount) => {
+      const buyTip =dateBuyAmount ? `(${this.props.textMap['dateBuyAmount']} ${dateBuyAmount})` : ''
+      const sellTip =dateSellAmount ? `(${this.props.textMap['dateSellAmount']} ${dateSellAmount})` : ''
       return {
         name: this.props.textMap['fundGrowthRate'] ,
-        value: roundToFix(fundGrowthRate * 100, 2)  + '%' + buyTip,
+        value: roundToFix(fundGrowthRate * 100, 2)  + '%' + buyTip + sellTip,
       }
     }] as [string, any]
   }
@@ -83,7 +84,7 @@ export class FundValChart extends Component<AmountProp> {
           position={`${x}*${y}`}
           size={2}
           color={COLOR_PLATE_16[0]}
-          tooltip={this.getTooltipFormat(y + '*totalBuyAmount')}
+          tooltip={this.getTooltipFormat('fundGrowthRate*dateBuyAmount*dateSellAmount')}
         />
 
         <Geom
@@ -91,7 +92,7 @@ export class FundValChart extends Component<AmountProp> {
           position="date*profitRate"
           size={2}
           color={COLOR_PLATE_16[2]}
-          tooltip={this.getTooltipFormat('profitRate')}
+          tooltip={this.getTooltipFormat('profitRate*profit')}
         />
 
         <Geom
@@ -99,18 +100,23 @@ export class FundValChart extends Component<AmountProp> {
           position={`${x}*${y}`}
           size={4}
           shape={"circle"}
-          opacity={['totalBuyAmount', (totalBuyAmount) => {
-            if (totalBuyAmount === 0) {
+          opacity={['dateBuyAmount*dateSellAmount', (...arg) => {
+            const dateBuyAmount = arg[0],
+            dateSellAmount = (arg as any)[1]
+
+            if (dateBuyAmount === 0 && dateSellAmount === 0) {
               return 0
             }
             return 1
           }]}
-          tooltip={this.getTooltipFormat(y + '*totalBuyAmount')}
-          style={[`totalBuyAmount`, {
+          tooltip={this.getTooltipFormat(y + '*dateBuyAmount')}
+          style={[`dateBuyAmount*dateSellAmount`, {
             lineWidth: 2,
-            fill(totalBuyAmount: number) {
-              if (totalBuyAmount > 0) {
-                return '#ff3000'
+            fill(dateBuyAmount: number, dateSellAmount: number) {
+              if(dateSellAmount > 0){
+                return COLOR_PLATE_8[2]
+              } else if (dateBuyAmount > 0) {
+                return COLOR_PLATE_8[7]
               } else {
                 return "#fff"
               }
