@@ -199,16 +199,16 @@ export class InvestDateSnapshot {
   fundStrategy: InvestmentStrategy 
 
   /** 
-   * 持仓成本 单价
+   * 持仓成本 单价，已经包含了 买入费率 的成本了
    * */ 
   cost!: number // 每天操作后计算赋值
    
 
   /**
-   * 持仓成本金额
+   * 持仓成本金额, 要加上买入费率，手续费也是自己的成本
    */
   get costAmount():number {
-    return roundToFix( this.cost * this.portion, 2 )
+    return roundToFix( this.cost * this.portion , 2 )
   }
 
   /** 
@@ -234,7 +234,7 @@ export class InvestDateSnapshot {
    * 持有收益率 = （当前净值 / 成本价）- 1 
    * */
   get profitRate():number {
-    if(this.cost === 0) {
+    if(this.costAmount === 0) {
       return 0
     }
     return roundToFix( this.curFund.val / this.cost - 1, 4 ) 
@@ -247,26 +247,26 @@ export class InvestDateSnapshot {
 
   /**
    * 总共买入的金额 
-   * 需要手动赋值初始化
    */
-  totalBuyAmount!: number
+  totalBuyAmount!: number //    * 需要手动赋值初始化
 
   /**
    * 总共卖出的金额 
-   * 需要手动赋值初始化
    */
-  totalSellAmount!: number
+  totalSellAmount!: number // * 需要手动赋值初始化
+
+ 
+  /**
+   * 最大本金，累计成本， 用于算累计收益率 https://sspai.com/post/53061
+   */
+   maxPrincipal!:number 
 
   /**
-   * 累计收益
+   * 累计收益率
    */
-  get totalProfit() {
-    return this.returnedProfit + this.profit
+  get totalProfitRate() {
+    return roundToFix( this.accumulatedProfit / this.maxPrincipal, 4 )
   }
-
-  /**
-   * 累计成本， 用于算累计收益率 https://sspai.com/post/53061
-   */
 
   /**
    * 资金弹药，还剩下多少钱可以加仓，可用资金
@@ -352,6 +352,7 @@ export class InvestDateSnapshot {
       this.totalBuyAmount = 0
       this.totalSellAmount = 0
       this.leftAmount = this.fundStrategy.totalAmount
+      this.maxPrincipal = 0
     } else {
       const latestInvestment = this.fundStrategy.latestInvestment
       this.portion = latestInvestment.portion
@@ -360,6 +361,7 @@ export class InvestDateSnapshot {
       this.totalBuyAmount = latestInvestment.totalBuyAmount
       this.totalSellAmount = latestInvestment.totalSellAmount
       this.returnedProfit = latestInvestment.returnedProfit
+      this.maxPrincipal = latestInvestment.maxPrincipal
     }
 
     this.operate()
@@ -393,6 +395,19 @@ export class InvestDateSnapshot {
 
     this.fundStrategy.latestInvestment = this
     
+  }
+
+  /**
+   * 计算最大的投入本金， 参考： https://sspai.com/post/53061
+   * 每次买入，都要重新 执行本方法，计算投入本金。
+   * 卖出无需执行，因为maxPrincipal 只会增，不会减
+   */
+  private calcMaxPrincipal() {
+    
+    // 如果当前本金 比上一次本金 高，那么更新 最大本金
+    if(this.maxPrincipal < this.costAmount) {
+      this.maxPrincipal = this.costAmount
+    }  
   }
 
   /**
@@ -482,8 +497,9 @@ export class InvestDateSnapshot {
     this.cost = roundToFix( (latestInvestment.costAmount + amount)  / this.portion , 4)
 
     // 买入后从剩余资金扣除
-    this.leftAmount = latestInvestment.leftAmount - amount
+    this.leftAmount = roundToFix(latestInvestment.leftAmount - amount, 2) 
     
+    this.calcMaxPrincipal()
     return this
   }
   /**

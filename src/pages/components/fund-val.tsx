@@ -23,6 +23,12 @@ import { roundToFix } from '@/utils/common';
 
 export class FundValChart extends Component<AmountProp> {
   getTooltipFormat(text: string) {
+    if(text === 'totalProfitRate*accumulatedProfit') {
+      return [text, (totalProfitRate: any, accumulatedProfit: number) => ({
+        name: '累计收益率',
+        value: roundToFix(totalProfitRate * 100, 2)  + '%' + `(${accumulatedProfit}元)`
+      })] as [string, any]
+    }
     if(text === 'profitRate*profit') {
       return [text, (profitRate: any, profit: number) => ({
         name: '持有收益',
@@ -56,23 +62,37 @@ export class FundValChart extends Component<AmountProp> {
       fundGrowthRate: {
         min: 0,
         max: 1
+      },
+      totalProfitRate: {
+        min: 0,
+        max: 1
       }
     }
     return <div >
       <h1 className="main-title" >
         基金业绩走势
       </h1>
-      {/* TODO: 买入卖出点点 */}
       
       <Chart data={data} scale={scale}  {...commonChartProp} >
         <Legend
-          itemFormatter={val => {
-            return textMap[val]
-          }}
+          itemFormatter={(()=>{
+            let fundGrowthRateCount = 0
+            return val => {
+              if(val === 'fundGrowthRate' ) {
+                fundGrowthRateCount++
+              }
+
+              if(val === 'fundGrowthRate' && fundGrowthRateCount === 2) {
+                return '交易点'
+              }
+              return textMap[val]
+            }
+          })()}
         />
         <Axis name={x} />
         <Axis name="fundGrowthRate" />
         <Axis name="profitRate" visible={false} />
+        <Axis name="totalProfitRate" visible={false} />
 
         <Tooltip
           crosshairs={{
@@ -93,6 +113,14 @@ export class FundValChart extends Component<AmountProp> {
           size={2}
           color={COLOR_PLATE_16[2]}
           tooltip={this.getTooltipFormat('profitRate*profit')}
+        />
+
+        <Geom
+          type="line"
+          position="date*totalProfitRate"
+          size={2}
+          color={COLOR_PLATE_16[3]}
+          tooltip={this.getTooltipFormat('totalProfitRate*accumulatedProfit')}
         />
 
         <Geom

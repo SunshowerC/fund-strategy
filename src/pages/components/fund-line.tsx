@@ -60,9 +60,11 @@ const investment = new InvestmentStrategy({
 investment
   .buy(0, '2018-12-26')
   .buy(5000, '2018-12-27')
-  .sell(3000, '2019-03-01')
+  .sell('all', '2019-03-01')
   .buy(5000, '2019-08-01')
   .sell(2000, '2019-09-01')
+  .buy(5000, '2019-12-01')
+
   // .sell('all', '2019-03-02')
   // .buy(5000, '2019-06-01')
 
@@ -91,6 +93,8 @@ export class FundLine extends Component {
 
     const investmentData = investment.data.map(item => {
       return {
+        // ...item,
+        // fundVal: Number(item.curFund.val),
         origin: item,
         totalAmount: item.totalAmount,
         leftAmount: item.leftAmount,
@@ -102,7 +106,9 @@ export class FundLine extends Component {
         fundGrowthRate: item.fundGrowthRate,
         dateBuyAmount: item.dateBuyAmount,
         dateSellAmount: item.dateSellAmount,
-        accumulatedProfit: item.accumulatedProfit
+        accumulatedProfit: item.accumulatedProfit,
+        maxPrincipal: item.maxPrincipal,
+        totalProfitRate: item.totalProfitRate
       }
     })
     let data = investmentData
@@ -120,13 +126,14 @@ export class FundLine extends Component {
       leftAmount: '剩余可用资金',
       profitRate: '持有收益率',
       profit: '持有收益',
-      totalProfit: '累计收益',
       fundAmount: '基金持有金额',
       fundVal: '基金净值',
       fundGrowthRate: '基金涨幅',
       dateBuyAmount: '买入金额',
       dateSellAmount: '卖出金额',
-      accumulatedProfit: '累计收益',
+      accumulatedProfit: '累计盈亏',
+      maxPrincipal: '累计本金',
+      totalProfitRate: '累计收益率',
     }
     console.log('源数据', data)
     return (

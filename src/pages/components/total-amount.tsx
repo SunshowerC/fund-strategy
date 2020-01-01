@@ -114,6 +114,14 @@ export class TotalAmountChart extends Component<AmountProp> {
           color={COLOR_PLATE_8[7]}
           tooltip={this.getTooltipFormat('fundAmount')}
         />
+{/* 
+        <Geom
+          type="line"
+          position="date*maxPrincipal"
+          size={2}
+          color={COLOR_PLATE_8[5]}
+          tooltip={this.getTooltipFormat('maxPrincipal')}
+        /> */}
         {/* <Geom
           type="point"
           position="date*totalAmount"
