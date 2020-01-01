@@ -1,6 +1,7 @@
 
 import axios from 'axios'
 import * as fs from 'fs'
+import {resolve} from 'path'
 
 export interface FundDataItem {
   date: string
@@ -69,17 +70,17 @@ const getFundData = async (fundCode: string|number, size?: number):Promise<FundJ
  * 保存为 json 文件
  */
 const genrateFundJsonFile = (fundJson:FundJson, filePath: string)=>{
-  try {
+  // try {
     fs.writeFileSync(filePath, JSON.stringify(fundJson))
-  } catch (err) {
-    console.error(err)
-  }
+  // } catch (err) {
+  //   console.error(err)
+  // }
 }
 
 
 const main = async ()=>{
   const list = await getFundData('260108', 1000)
-  genrateFundJsonFile(list, './static/景顺长城新兴成长混合260108.json')
+  genrateFundJsonFile(list,  resolve(__dirname,'../src/utils/fund-stragegy/static/景顺长城新兴成长混合260108.json'))
 }
 main()
 

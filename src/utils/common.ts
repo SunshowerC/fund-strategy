@@ -1,11 +1,11 @@
 import lodash from 'lodash'
 
 
-export const dateFormat = (dateInput, format = 'yyyy-MM-dd') => {
+export const dateFormat = (dateInput, format = 'yyyy-MM-dd'):string => {
   const dateObj = new Date(dateInput)
 
   if (!dateObj.getFullYear()) {
-    console.error(dateInput, dateObj)
+    console.log(dateInput, dateObj)
     return dateInput
   }
 
@@ -52,7 +52,7 @@ export const dateFormat = (dateInput, format = 'yyyy-MM-dd') => {
  * @param num 数字
  * @param fractionDigits 保留几位小数
  */
-export const roundToFix = (num: number|string, fractionDigits: number):number=>{
+export const roundToFix = (num: number|string, fractionDigits: number = 2):number=>{
   const powNum = Math.pow(10, fractionDigits)
   return Number((Math.round(Number(num) * powNum) / powNum).toFixed(fractionDigits))
 }

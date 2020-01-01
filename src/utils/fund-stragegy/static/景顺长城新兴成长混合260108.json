@@ -16,6 +16,76 @@
     }
   },
   "all": {
+    "2019-12-27": {
+      "date": "2019-12-27",
+      "val": "1.8080",
+      "accumulatedVal": "3.3450",
+      "growthRate": "1.12",
+      "bonus": ""
+    },
+    "2019-12-26": {
+      "date": "2019-12-26",
+      "val": "1.7880",
+      "accumulatedVal": "3.3250",
+      "growthRate": "0.28",
+      "bonus": ""
+    },
+    "2019-12-25": {
+      "date": "2019-12-25",
+      "val": "1.7830",
+      "accumulatedVal": "3.3200",
+      "growthRate": "-0.22",
+      "bonus": ""
+    },
+    "2019-12-24": {
+      "date": "2019-12-24",
+      "val": "1.7870",
+      "accumulatedVal": "3.3240",
+      "growthRate": "0.34",
+      "bonus": ""
+    },
+    "2019-12-23": {
+      "date": "2019-12-23",
+      "val": "1.7810",
+      "accumulatedVal": "3.3180",
+      "growthRate": "-0.84",
+      "bonus": ""
+    },
+    "2019-12-20": {
+      "date": "2019-12-20",
+      "val": "1.7960",
+      "accumulatedVal": "3.3330",
+      "growthRate": "0.06",
+      "bonus": ""
+    },
+    "2019-12-19": {
+      "date": "2019-12-19",
+      "val": "1.7950",
+      "accumulatedVal": "3.3320",
+      "growthRate": "-0.50",
+      "bonus": ""
+    },
+    "2019-12-18": {
+      "date": "2019-12-18",
+      "val": "1.8040",
+      "accumulatedVal": "3.3410",
+      "growthRate": "-0.28",
+      "bonus": ""
+    },
+    "2019-12-17": {
+      "date": "2019-12-17",
+      "val": "1.8090",
+      "accumulatedVal": "3.3460",
+      "growthRate": "1.29",
+      "bonus": ""
+    },
+    "2019-12-16": {
+      "date": "2019-12-16",
+      "val": "1.7860",
+      "accumulatedVal": "3.3230",
+      "growthRate": "-0.83",
+      "bonus": ""
+    },
     "2019-12-13": {
       "date": "2019-12-13",
       "val": "1.8010",
@@ -6944,76 +7014,6 @@
       "val": "0.9790",
       "accumulatedVal": "2.3390",
       "growthRate": "-0.20",
-      "bonus": ""
-    },
-    "2015-12-01": {
-      "date": "2015-12-01",
-      "val": "0.9810",
-      "accumulatedVal": "2.3410",
-      "growthRate": "0.10",
-      "bonus": ""
-    },
-    "2015-11-30": {
-      "date": "2015-11-30",
-      "val": "0.9800",
-      "accumulatedVal": "2.3400",
-      "growthRate": "0.41",
-      "bonus": ""
-    },
-    "2015-11-27": {
-      "date": "2015-11-27",
-      "val": "0.9760",
-      "accumulatedVal": "2.3360",
-      "growthRate": "-4.13",
-      "bonus": ""
-    },
-    "2015-11-26": {
-      "date": "2015-11-26",
-      "val": "1.0180",
-      "accumulatedVal": "2.3780",
-      "growthRate": "-0.88",
-      "bonus": ""
-    },
-    "2015-11-25": {
-      "date": "2015-11-25",
-      "val": "1.0270",
-      "accumulatedVal": "2.3870",
-      "growthRate": "1.48",
-      "bonus": ""
-    },
-    "2015-11-24": {
-      "date": "2015-11-24",
-      "val": "1.0120",
-      "accumulatedVal": "2.3720",
-      "growthRate": "0.20",
-      "bonus": ""
-    },
-    "2015-11-23": {
-      "date": "2015-11-23",
-      "val": "1.0100",
-      "accumulatedVal": "2.3700",
-      "growthRate": "-0.69",
-      "bonus": ""
-    },
-    "2015-11-20": {
-      "date": "2015-11-20",
-      "val": "1.0170",
-      "accumulatedVal": "2.3770",
-      "growthRate": "0.20",
-      "bonus": ""
-    },
-    "2015-11-19": {
-      "date": "2015-11-19",
-      "val": "1.0150",
-      "accumulatedVal": "2.3750",
-      "growthRate": "1.20",
-      "bonus": ""
-    },
-    "2015-11-18": {
-      "date": "2015-11-18",
-      "val": "1.0030",
-      "accumulatedVal": "2.3630",
-      "growthRate": "-0.89",
       "bonus": ""
     }
   }
