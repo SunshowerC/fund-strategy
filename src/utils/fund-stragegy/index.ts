@@ -265,6 +265,9 @@ export class InvestDateSnapshot {
    * 累计收益率
    */
   get totalProfitRate() {
+    if(this.maxPrincipal === 0) {
+      return 0
+    }
     return roundToFix( this.accumulatedProfit / this.maxPrincipal, 4 )
   }
 

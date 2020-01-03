@@ -18,10 +18,11 @@ import {
 } from "bizcharts";
 import React from 'react';
 import { COLOR_PLATE_8 } from '@/utils/color';
+import { InvestDateSnapshot } from '@/utils/fund-stragegy';
 
 
 export interface AmountProp {
-  data: any[]
+  data: InvestDateSnapshot[]
   textMap: Record<string, string>
 
   commonProp: {
@@ -36,28 +37,10 @@ export interface AmountProp {
 export interface AmountState {
 
 }
-
-
-const commonScale = {
-  min: 0,
-  max: 30000
-}
+ 
 
 export class TotalAmountChart extends Component<AmountProp> {
-
-  readonly state = {
-    scale: {
-      totalAmount: {
-        ...commonScale
-      },
-      fundAmount: {
-        ...commonScale
-      },
-      leftAmount: {
-        ...commonScale
-      },
-    }
-  }
+ 
 
   getTooltipFormat(text: string) {
     return [text, (value: any) => ({
@@ -66,10 +49,30 @@ export class TotalAmountChart extends Component<AmountProp> {
     })] as [string, any]
   }
 
+  /** 
+   * 获取曲线最大最小值
+   * */
+  get scale() {
+    const list = this.props.data.reduce((valList,cur)=>{
+      valList.push(cur.totalAmount, cur.leftAmount, cur.fundAmount) 
+      return valList
+    }, [] as number[])
+
+    const minMax = {
+      min: Math.min(...list),
+      max: Math.max(...list)
+    }
+    return {
+      totalAmount: minMax,
+      leftAmount: minMax,
+      fundAmount: minMax
+    }
+  }
+
   render() {
     const { data, textMap, commonProp } = this.props
     const commonChartProp = commonProp.chart
-    const { scale } = this.state
+    const scale = this.scale
     return <div >
       <h1 className="main-title" >
         资产增长趋势图

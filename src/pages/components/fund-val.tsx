@@ -50,24 +50,31 @@ export class FundValChart extends Component<AmountProp> {
     y: 'fundGrowthRate'
   }
 
+  /** 
+   * 获取曲线最大最小值
+   * */
+  get scale() {
+    const list = this.props.data.reduce((valList,cur)=>{
+      valList.push(cur.profitRate, cur.fundGrowthRate, cur.totalProfitRate) 
+      return valList
+    }, [] as number[])
+
+    const minMax = {
+      min: Math.min(...list),
+      max: Math.max(...list)
+    }
+    return {
+      profitRate: minMax,
+      fundGrowthRate: minMax,
+      totalProfitRate: minMax
+    }
+  }
+
   render() {
     const { data, textMap, commonProp } = this.props
     const commonChartProp = commonProp.chart
     const { x, y } = this.xy
-    const scale = {
-      profitRate: {
-        min: 0,
-        max: 1
-      },
-      fundGrowthRate: {
-        min: 0,
-        max: 1
-      },
-      totalProfitRate: {
-        min: 0,
-        max: 1
-      }
-    }
+    const scale = this.scale
     return <div >
       <h1 className="main-title" >
         基金业绩走势
