@@ -3,6 +3,7 @@ import axios from 'axios'
 import { notification } from 'antd'
 import { dateFormat } from '../common'
 
+// TODO: 使用 fetch-jsonp
 const getJSONP = window['getJSONP']
 
 export interface FundDataItem {
@@ -74,4 +75,24 @@ export const getFundData = async (fundCode: string | number, size: number | [any
 
 }
 
+export interface FundInfo {
+  code: string
+  name: string
+}
+export const getFundInfo = async (key):Promise<FundInfo[]>=>{
+  return new Promise((resolve)=>{
+    const path = `https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m=10&t=700&IsNeedBaseInfo=0&IsNeedZTInfo=0&key=${key}&_=${Date.now()}`
 
+    getJSONP(path, (resp) => {
+      const result = resp.Datas.map(item => {
+        return {
+          code: item.CODE,
+          name: item.NAME
+        }
+      })
+
+      resolve(result)
+    })
+  })
+
+}

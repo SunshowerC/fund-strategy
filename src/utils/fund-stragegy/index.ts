@@ -386,7 +386,11 @@ export class InvestDateSnapshot {
     // 每天的操作，只需要手动更新：date, cost，portion, leftAmount
     this.date = options.date ? dateFormat(options.date) : dateFormat(Date.now())
     this.fundStrategy = options.fundStrategy!
-    this.curFund = this.fundStrategy.getFundByDate(this.date)
+    try {
+      this.curFund = this.fundStrategy.getFundByDate(this.date)
+    } catch(e) {
+      throw new RangeError('所选时间超出基金运营范围')
+    }
     if(!this.fundStrategy.latestInvestment) {
       this.portion = 0
       this.cost = 0

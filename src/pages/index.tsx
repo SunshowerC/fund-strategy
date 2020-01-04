@@ -5,7 +5,8 @@ import { SearchForm, FundFormObj } from './components/search-form'
 import 'antd/dist/antd.css'
 import { getFundData, FundJson } from '@/utils/fund-stragegy/fetch-fund-data';
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy';
-
+import { notification } from 'antd';
+import moment from 'moment'
 
 
 export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}> {
@@ -14,12 +15,27 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
     fundData: [] as InvestDateSnapshot[]
   }
 
+
+  /**
+   * 基金数据查询
+   */
   getFundData = async (formData: FundFormObj) => {
     console.log('基金情书', formData)
 
     const result = await getFundData(formData.fundId, formData.dateRange)
     console.log('result', result)
-    this.createInvestStragegy(result, formData)
+    const startDate = new Date( Object.keys(result.all).pop()! )
+    if(startDate.getTime() > new Date(formData.dateRange[0]).getTime()) {
+      formData.dateRange[0] = moment(startDate)
+    }
+    try {
+      this.createInvestStragegy(result, formData)
+    } catch(e) {
+      notification.error({
+        message: '基金创建错误',
+        description: e.message
+      })
+    }
   }
 
   createInvestStragegy(fundData: FundJson, formData: FundFormObj) {
