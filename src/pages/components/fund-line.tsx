@@ -27,50 +27,16 @@ import {
   Util
 } from "bizcharts";
 import FundDataJson from '@/utils/fund-stragegy/static/景顺长城新兴成长混合260108.json'
-import { InvestmentStrategy } from '@/utils/fund-stragegy/index.ts';
+import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy/index.ts';
 import { FundJson } from 'tools/get-fund-data-json';
 import { TotalAmountChart, AmountProp } from './total-amount'
 import { FundValChart } from './fund-val'
 import { RateChart } from './rate'
+import {CommonFundLine} from './common-line'
 
-const investment = new InvestmentStrategy({
-  // fundJson: FundDataJson as FundJson,
-  // range: ['2019-01-01', '2019-12-01'],
-  totalAmount: 10000,
-  salary: 0,
-  fixedInvestment: {
-    amount: 300,
-    period: 'weekly',
-    dateOrWeek: 4,
-  },
-  // buyFeeRate: 0.0015,
-  // sellFeeRate: 0.005,
-  stop: {
-    rate: 0.05,
-    minAmount: 50000,
-  },
 
-  tInvest: {
-    rate: 0.05,
-    amount: 1000
-  },
-  fundJson: FundDataJson as any as FundJson
-})
 
-investment
-  .buy(0, '2018-12-26')
-  .buy(5000, '2018-12-27')
-  .sell('all', '2019-03-01')
-  .buy(5000, '2019-08-01')
-  .sell(2000, '2019-09-01')
-  .buy(5000, '2019-12-01')
-
-  // .sell('all', '2019-03-02')
-  // .buy(5000, '2019-06-01')
-
-  // .buy(0, '2019-03-02')
-console.log('investment', investment)
-export class FundLine extends Component {
+export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
 
   commonProp: AmountProp['commonProp'] = {
     chart: {
@@ -83,15 +49,8 @@ export class FundLine extends Component {
   }
 
   render() {
-    // const data = [
-    //   {
-    //       month: "Jan",
-    //       city: "Tokyo",
-    //       temperature: 7
-    //   }
-    // ];
 
-    const investmentData = investment.data.map(item => {
+    const investmentData = this.props.data.map(item => {
       return {
         // ...item,
         // fundVal: Number(item.curFund.val),
@@ -111,7 +70,7 @@ export class FundLine extends Component {
         totalProfitRate: item.totalProfitRate
       }
     })
-    let data = investmentData
+    let data = investmentData as any as InvestDateSnapshot[]
     const cols = {
       date: {
         // x 轴的比例尺
@@ -137,15 +96,16 @@ export class FundLine extends Component {
     }
     console.log('源数据', data)
     return (
-      <div style={{
-        margin: "0 auto",
-        maxWidth: '1200px'
-      }}>
+      <div >
         <FundValChart data={data} textMap={keyTextMap} commonProp={this.commonProp}  />
+
+        <RateChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />
 
         <TotalAmountChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />
 
-        <RateChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />
+        <CommonFundLine 
+          y='totalAmount'
+          data={data} textMap={keyTextMap} commonProp={this.commonProp} />
       </div>
     );
   }

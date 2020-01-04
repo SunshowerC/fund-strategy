@@ -17,7 +17,7 @@ const config: IConfig =  {
     ['umi-plugin-react', {
       antd: true,
       dva: true,
-      dynamicImport: false,
+      dynamicImport: true,
       title: '基金定投策略分析',
       dll: true,
       

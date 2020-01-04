@@ -3,6 +3,9 @@
   font-family: Georgia, sans-serif;
   margin-top: 4em;
   text-align: center;
+
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .welcome {

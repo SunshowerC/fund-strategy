@@ -56,3 +56,34 @@ export const roundToFix = (num: number|string, fractionDigits: number = 2):numbe
   const powNum = Math.pow(10, fractionDigits)
   return Number((Math.round(Number(num) * powNum) / powNum).toFixed(fractionDigits))
 }
+
+
+
+/** 
+ * jsonp 获取数据 
+ * */
+window['getJSONP'] = (url: string,callback: Function) => {
+  var cbnum = "cb" + window['getJSONP'].counter++;
+  var cbname = "getJSONP." + cbnum;
+
+  if (url.indexOf("?") == -1) {
+     url += "?callback=" + cbname;
+  } else {
+     url += "&callback=" + cbname;
+  }
+
+  var script = document.createElement("script");
+  window['getJSONP'][cbnum] = function (response) {
+     try {
+        callback(response);
+     }
+     finally {
+        delete window['getJSONP'][cbnum];
+        script.parentNode!.removeChild(script);
+     }
+  };
+
+  script.src = url;
+  document.body.appendChild(script);
+}
+window['getJSONP'].counter = 0;

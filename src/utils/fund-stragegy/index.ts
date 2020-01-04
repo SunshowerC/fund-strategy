@@ -23,19 +23,19 @@ interface FundTransaction {
   amount: number
 }
 
-/**
- * 基金的长期投资计划
- */
+export interface FixedInvestOption {
+  fixedInvestment: {
+    amount: number // 每次定投金额
+    dateOrWeek: number // 每周周几，每月几号定投
+    period: 'weekly' | 'monthly'   // 每周，每月，每 2 周定投
+  }, 
+  range: [string| Date, string| Date]
+}
+
 export class InvestmentStrategy {
   totalAmount!: number // 初始资本，存量
   salary!: number // 工资，每月增量资金
   
-  fixedInvestment!: {
-    amount: number // 每次定投金额
-    dateOrWeek: number // 每周周几，每月几号定投
-    period: 'weekly' | 'monthly'   // 每周，每月，每 2 周定投
-  } // 定投周期
-
   /**
    * 当前投资的状态
    */
@@ -62,53 +62,88 @@ export class InvestmentStrategy {
    * 该基金策略下运行的每个交易日的数据
    */
   data: InvestDateSnapshot[] = []
+  dataMap: Record<string, InvestDateSnapshot> = {}
 
   // range!: [string| Date, string| Date]
 
-  constructor(options: Pick<InvestmentStrategy, 'fixedInvestment'|'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'>) {
+  /**
+   * 基金的长期投资计划
+   */
+  constructor(options: Pick<InvestmentStrategy, 'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'>) {
     Object.assign(this, options)
+  }
 
-    
-    
+  /** 
+   * 是否应该定投
+   */
+  private shouldFixedInvest(fixedInvestment: FixedInvestOption['fixedInvestment'], date:any):boolean {
+    const now = new Date(date)
+    if(fixedInvestment.period === 'monthly') {
+      return now.getDate() === fixedInvestment.dateOrWeek
+    } else if(fixedInvestment.period === 'weekly') {
+      return now.getDay() === fixedInvestment.dateOrWeek
+    } else {
+      return false 
+    }
   }
 
   /**
    * 策略定投
    */
-  fixedInvest(range: [string| Date, string| Date]) {
+  fixedInvest(opt: FixedInvestOption) {
+    const {range, fixedInvestment} = opt
+    
+    
     // 定投策略
     const beginTime = new Date(range[0]).getTime()
     const endTime = new Date(range[1]).getTime()
-    let tempDate = beginTime
+    if(beginTime > endTime){
+      throw new Error('range[1] should not less than range[0]')
+    }
+    let curDate = beginTime // 中间的日期
 
-    while(tempDate <= endTime) {
-      const dateStr = dateFormat(tempDate)
-      if(!this.data || this.data.length === 0) {
-        let beginFundData: FundDataItem = this.getFundByDate(dateStr)  
+    while(curDate <= endTime) {
+      // 如果还没有数据, 填充初始数据
+      // if(!this.data || this.data.length === 0) {
+      //   this.buy(0, curDate - ONE_DAY)
+      // }  
 
-        this.data.push(new InvestDateSnapshot({
-          fundStrategy: this,
-          cost: beginFundData.val,
-          portion: 0,
-          date: dateStr,
-          leftAmount: this.totalAmount,
-        }))
+      if(this.shouldFixedInvest(fixedInvestment, curDate)){
+        this.buy(fixedInvestment.amount, curDate)
       } else {
-      // const len = this.data.length
-      // let curFundData: FundDataItem = this.fundJson.all[ dateFormat(tempDate) ]
-
-      this.data.push(new InvestDateSnapshot({
-        fundStrategy: this,
-        // cost: curFundData.val,
-        // portion: 0,
-        date: dateStr,
-        // leftAmount: this.totalAmount,
-      }))
+        this.buy(0, curDate)
       }
       
-      tempDate += 24 * 60 * 60 * 1000
+      curDate += 24 * 60 * 60 * 1000
+    }
+
+    return this
+  }
+
+  /** 
+   * 获取指定日期的基金快照
+   */
+  private getSnapshotInstance(date:any):InvestDateSnapshot {
+    if(this.dataMap[date]) {
+      return this.dataMap[date]
+    } else {
+      return new InvestDateSnapshot({
+        fundStrategy: this,
+        date: date
+      })
     }
   }
+
+  /**
+   * 数据更新
+   */
+  private pushData(investSnap: InvestDateSnapshot) {
+    this.data.push(investSnap)
+    if(!this.dataMap[investSnap.date]) {
+      this.dataMap[investSnap.date] = investSnap
+    }
+  }
+
 
   /**
    * 买入基金
@@ -127,8 +162,7 @@ export class InvestmentStrategy {
           date: dateFormat(latestInvestDate)
         }).buy(0)
         // console.log('date', invest.date, invest)
-
-        this.data.push(invest)
+        this.pushData(invest)
         latestInvestDate += ONE_DAY
       }
     }  
@@ -137,10 +171,15 @@ export class InvestmentStrategy {
       date: dateStr
     }).buy(amount)
 
-    this.data.push(invest)
+    this.pushData(invest)
     return this
   }
 
+  /**
+   * 赎回基金
+   * @param amount 赎回金额
+   * @param date 日期
+   */
   sell(amount:number|'all', date: any) {
     const dateStr = dateFormat(date)
     let cur = new Date(date).getTime()
@@ -155,7 +194,7 @@ export class InvestmentStrategy {
           date: dateFormat(latestInvestDate)
         }).sell({amount: 0})
 
-        this.data.push(invest)
+        this.pushData(invest)
         latestInvestDate += ONE_DAY
       }
     }  
@@ -169,7 +208,7 @@ export class InvestmentStrategy {
       invest.sell({amount})
     }
 
-    this.data.push(invest)
+    this.pushData(invest)
     return this
   }
 
@@ -295,17 +334,17 @@ export class InvestDateSnapshot {
   
   date: string // 当前日期
 
-  get shouldFixedInvest():boolean {
-    const now = new Date(this.date)
-    const fixedInvestment = this.fundStrategy.fixedInvestment
-    if(fixedInvestment.period === 'monthly') {
-      return now.getDate() === fixedInvestment.dateOrWeek
-    } else if(fixedInvestment.period === 'weekly') {
-      return now.getDay() === fixedInvestment.dateOrWeek
-    } else {
-      return false 
-    }
-  }
+  // get shouldFixedInvest():boolean {
+  //   const now = new Date(this.date)
+  //   const fixedInvestment = this.fundStrategy.fixedInvestment
+  //   if(fixedInvestment.period === 'monthly') {
+  //     return now.getDate() === fixedInvestment.dateOrWeek
+  //   } else if(fixedInvestment.period === 'weekly') {
+  //     return now.getDay() === fixedInvestment.dateOrWeek
+  //   } else {
+  //     return false 
+  //   }
+  // }
 
   /**
    * 当前基金数据
@@ -559,29 +598,21 @@ export class InvestDateSnapshot {
 // 普通场景 涨幅： Tb / Ta - 1 
 // 中间存在 分红点： Tb / fh * (fh + 派送金额) / Ta - 1 
 
-
-// const ist = new InvestmentStrategy({
-//   // fundJson: FundDataJson as FundJson,
-//   range: ['2018-01-01', '2019-12-01'],
-//   totalAmount: 100000,
-//   salary: 10000,
-//   fixedInvestment: {
-//     amount: 300,
-//     period: 'weekly',
-//     dateOrWeek: 4,
-//   },
-//   // buyFeeRate: 0.0015,
-//   // sellFeeRate: 0.005,
-//   stop: {
-//     rate: 0.05,
-//     minAmount: 50000,
-//   },
-
-//   tInvest: {
-//     rate: 0.05,
-//     amount: 1000
-//   },
-//   fundJson: FundDataJson as any as FundJson
-// })
-
-// console.log('ist', ist)
+// 买卖
+// investment
+    //   .buy(0, '2018-12-26')
+    //   .buy(5000, '2018-12-27')
+    //   .sell('all', '2019-03-01')
+    //   .buy(5000, '2019-08-01')
+    //   .sell(2000, '2019-09-01')
+    //   .buy(5000, '2019-12-01')
+    
+    // 定投
+    // investment.fixedInvest({
+    //   fixedInvestment: {
+    //     period: 'weekly',
+    //     amount: 1200,
+    //     dateOrWeek: 4
+    //   },
+    //   range: ['2019-01-01','2019-12-01']
+    // })
