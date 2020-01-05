@@ -244,7 +244,7 @@ export class InvestDateSnapshot {
    
 
   /**
-   * 持仓成本金额, 要加上买入费率，手续费也是自己的成本
+   * 持仓成本金额, 已经包括了买入费率，手续费也是自己的成本
    */
   get costAmount():number {
     return roundToFix( this.cost * this.portion , 2 )
@@ -271,6 +271,7 @@ export class InvestDateSnapshot {
   } 
   /** 
    * 持有收益率 = （当前净值 / 成本价）- 1 
+   * 依赖 this.cost
    * */
   get profitRate():number {
     if(this.costAmount === 0) {
@@ -352,13 +353,57 @@ export class InvestDateSnapshot {
   curFund: FundDataItem 
 
   /**
+   * 获取区间内的分红点
+   * @param start 开始时间
+   * @param end 结束时间
+   */
+  private getBonusBetween(start, end) {
+    const startDate = new Date(start).getTime(),
+          endDate = new Date(end).getTime()
+    const bonus = this.fundStrategy.fundJson.bonus
+    
+    const bonusFundList = Object.values(bonus).reduce((relatedBonus, cur)=>{
+      const curDate = new Date(cur.date).getTime()
+      if( curDate >= startDate && curDate <= endDate) {
+        relatedBonus.push(cur)
+      }
+      return relatedBonus
+    }, [] as FundDataItem[])
+    return bonusFundList
+  }
+
+  curBonus: FundDataItem[] = []
+
+  /**
+   * 是否是分红日
+   */
+  get isBonus():boolean {
+    return Boolean(this.fundStrategy.fundJson.bonus[this.date])
+  }
+
+  /**
    * 基金在区间内的涨幅
    */
   get fundGrowthRate():number {
+    
+
+    // 个时间点到某个时间点之间的 涨幅比较
+    // 普通场景 涨幅： Tb / Ta - 1 
+    // 中间存在 分红点
+    // 多个分红点： 最新净值 / 开始点的净值 * 【(分红点分红后当天涨跌后净值 + 分红值) / 分红点分红后当天涨跌后净值 * (分红点2 + 分红值) / 分红点2 * ...  】  - 1 
     if(this.fundStrategy.data[0]) {
+      const bonus = this.curBonus
       // 起始基金净值
       const firstFundVal = this.fundStrategy.data[0].curFund.val
-      return roundToFix((this.curFund.val - firstFundVal) / firstFundVal, 4)
+      if(bonus.length === 0) {
+        return roundToFix((this.curFund.val - firstFundVal) / firstFundVal, 4)
+      } else {
+        const growWithBonus = bonus.reduce((result, curBonus)=>{
+          return result * (Number(curBonus.val) + Number(curBonus.bonus)) / curBonus.val
+        }, this.curFund.val/firstFundVal) - 1
+        return roundToFix(growWithBonus, 4)
+      }
+      
     } else {
       return 0
     }
@@ -408,6 +453,7 @@ export class InvestDateSnapshot {
       this.totalSellAmount = latestInvestment.totalSellAmount
       this.returnedProfit = latestInvestment.returnedProfit
       this.maxPrincipal = latestInvestment.maxPrincipal
+      this.curBonus = this.getBonusBetween(this.fundStrategy.data[0].date, this.date)
     }
 
     this.operate()
@@ -420,17 +466,20 @@ export class InvestDateSnapshot {
     this.income()
     // TODO: 
     // 分红日？重新计算 成本和 份额。【分红后，收益不变，净值变低。 所以 持仓成本 = 分红后净值/ （profitRate+1）】【份额 = fundAmount / 分红后净值】
-    
+    if(this.isBonus) {
+      this.cost = this.cost * this.curFund.val / (Number(this.curFund.val) + Number(this.curFund.bonus)) 
+      this.portion = this.portion * (Number(this.curFund.val) + Number(this.curFund.bonus)) / this.curFund.val
+    }
     // 定投日? 买入定投金额
     // if(this.shouldFixedInvest) {
     //   this.buy(this.fundStrategy.fixedInvestment.amount)
     // }
     
-    // TODO: 触发补仓？
+    //  触发补仓？
 
-    // TODO: 触发止盈？
+    //  触发止盈？
 
-    // TODO: 触发卖出补仓份额？
+    //  触发卖出补仓份额？
 
     
 
@@ -515,6 +564,10 @@ export class InvestDateSnapshot {
    * @param amount 金额
    */
   buy(amount:number) {
+    // 分红日不允许买卖
+    if(this.isBonus) {
+      return this
+    }
     // amount 是掏出的钱
     // buyTxn.amount 是除去 手续费后，确切买入基金的金额， 两者差价为买入手续费
     // if(amount > 0) {
@@ -553,7 +606,11 @@ export class InvestDateSnapshot {
    * @param txn 卖出信息
    */
   sell(txn:Partial<FundTransaction>|'all') {
-    
+    // 分红日不允许买卖
+    if(this.isBonus) {
+      return this
+    }
+
     // 上一次快照， 
     const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
       portion : 0,
@@ -598,9 +655,7 @@ export class InvestDateSnapshot {
 
 }
 
-// TODO: 某个时间点到某个时间点之间的 涨幅比较
-// 普通场景 涨幅： Tb / Ta - 1 
-// 中间存在 分红点： Tb / fh * (fh + 派送金额) / Ta - 1 
+
 
 // 买卖
 // investment
