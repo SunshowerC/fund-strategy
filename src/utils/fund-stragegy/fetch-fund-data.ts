@@ -12,6 +12,8 @@ export interface FundDataItem {
   accumulatedVal: number
   growthRate: number
   bonus: number
+  isBonusPortion?: boolean // FHSP: "每份基金份额折算1.020420194份"
+
 }
 
 export interface FundJson {
@@ -43,7 +45,9 @@ export const getFundData = async (fundCode: string | number, size: number | [any
       // 累计净值 LJJX，  accumulatedVal
       // 日增长率 JZZZL   growthRate
       // 分红送配 FHFCZ  bonus
+      // FHSP: "每份基金份额折算1.020420194份"
 
+      let previousItem 
       const formatResult = historyVal.reduce((result, item) => {
         const curFundObj: FundDataItem = {
           date: item.FSRQ,
@@ -52,11 +56,20 @@ export const getFundData = async (fundCode: string | number, size: number | [any
           growthRate: item.JZZZL,
           bonus: item.FHFCZ
         }
+        
         result.all[curFundObj.date] = curFundObj
 
         if (curFundObj.bonus) {
           result.bonus[curFundObj.date] = curFundObj
+          
+          // 分红分为 分红派送，以及份额折算两种
+          if((item.FHSP as string).startsWith('每份基金份额折算')) {
+            curFundObj.isBonusPortion = true
+            // curFundObj.bonus = previousItem.val * (1 + curFundObj.growthRate / 100) * (1 - 1 / curFundObj.bonus)
+          }
         }
+
+        previousItem = curFundObj
 
         return result
       }, {

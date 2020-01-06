@@ -3,8 +3,9 @@
  * 投资快照类 描述了投资过程中，某一天的状态
  **************************/
 
-import { FundJson, FundDataItem } from "../../../tools/get-fund-data-json"
+import { FundJson } from "../../../tools/get-fund-data-json"
 import { dateFormat, roundToFix } from "../common"
+import { FundDataItem } from './fetch-fund-data'
 // import FundDataJson from './static/景顺长城新兴成长混合260108.json'
 const ONE_DAY = 24 * 60 * 60 * 1000
 
@@ -395,8 +396,13 @@ export class InvestDateSnapshot {
       if(bonus.length === 0) {
         return roundToFix((this.curFund.val - firstFundVal) / firstFundVal, 4)
       } else {
-        const growWithBonus = bonus.reduce((result, curBonus)=>{
-          return result * (Number(curBonus.val) + Number(curBonus.bonus)) / curBonus.val
+        let growWithBonus = bonus.reduce((result, curBonus)=>{
+          if(curBonus.isBonusPortion) {
+            return result * curBonus.bonus
+          } else {
+            return result * (Number(curBonus.val) + Number(curBonus.bonus)) / curBonus.val  
+          }
+          
         }, this.curFund.val/firstFundVal) - 1
         return roundToFix(growWithBonus, 4)
       }
@@ -462,8 +468,14 @@ export class InvestDateSnapshot {
     // TODO: 
     // 分红日？重新计算 成本和 份额。【分红后，收益不变，净值变低。 所以 持仓成本 = 分红后净值/ （profitRate+1）】【份额 = fundAmount / 分红后净值】
     if(this.isBonus) {
-      this.cost = this.cost * this.curFund.val / (Number(this.curFund.val) + Number(this.curFund.bonus)) 
-      this.portion = this.portion * (Number(this.curFund.val) + Number(this.curFund.bonus)) / this.curFund.val
+      if(this.curFund.isBonusPortion) {
+        this.cost = this.cost / this.curFund.bonus
+        this.portion = this.portion * this.curFund.bonus
+      } else {
+        this.cost = this.cost * this.curFund.val / (Number(this.curFund.val) + Number(this.curFund.bonus)) 
+        this.portion = this.portion * (Number(this.curFund.val) + Number(this.curFund.bonus)) / this.curFund.val
+      }
+      
     }
     // 定投日? 买入定投金额
     // if(this.shouldFixedInvest) {

@@ -44,6 +44,10 @@ export class InnerSearchForm extends Component<FundSearchProp, {
     });
   }
 
+  reset = ()=>{
+    this.props.form.resetFields()
+  }
+
   private disabledDate = (date) => {
     const selectDate = new Date(date).getTime()
     const now = Date.now()
@@ -118,6 +122,12 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       }}>
           <Button type="primary" htmlType="submit">
             查询
+          </Button>
+
+          <Button style={{
+            marginLeft: 20
+          }} onClick={this.reset} >
+            重置
           </Button>
       </Form.Item>
     </Form> 
