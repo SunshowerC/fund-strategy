@@ -232,6 +232,7 @@ export class InvestmentStrategy {
  * 投资周期中，某一天的持仓快照
  */
 export class InvestDateSnapshot {
+  // 基础数据： cost， portion，totalBuyAmount，totalSellAmount，maxPrincipal，leftAmount，date，curFund，curBonus，dateBuyAmount，dateSellAmount
   /**
    * 基金投资策略
    */
@@ -279,11 +280,7 @@ export class InvestDateSnapshot {
     }
     return roundToFix( this.curFund.val / this.cost - 1, 4 ) 
   }
-
-  /**
-   * 赎回了的收益
-   */
-  returnedProfit!: number
+ 
 
   /**
    * 总共买入的金额 
@@ -439,7 +436,6 @@ export class InvestDateSnapshot {
     if(!this.fundStrategy.latestInvestment) {
       this.portion = 0
       this.cost = 0
-      this.returnedProfit = 0
       this.totalBuyAmount = 0
       this.totalSellAmount = 0
       this.leftAmount = this.fundStrategy.totalAmount
@@ -451,7 +447,6 @@ export class InvestDateSnapshot {
       this.leftAmount = latestInvestment.leftAmount
       this.totalBuyAmount = latestInvestment.totalBuyAmount
       this.totalSellAmount = latestInvestment.totalSellAmount
-      this.returnedProfit = latestInvestment.returnedProfit
       this.maxPrincipal = latestInvestment.maxPrincipal
       this.curBonus = this.getBonusBetween(this.fundStrategy.data[0].date, this.date)
     }
@@ -514,7 +509,6 @@ export class InvestDateSnapshot {
     const salaryDate = 1
     // 发薪日
     if(new Date(this.date).getDate() === salaryDate) {
-      
       this.leftAmount +=  this.fundStrategy.salary
     }  
   }
@@ -583,20 +577,22 @@ export class InvestDateSnapshot {
       amount
     })
     // 上一次快照
-    const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
-      portion : 0,
-      cost: 0,
-      costAmount: 0,
-      leftAmount: this.fundStrategy.totalAmount
-    }
+    // const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
+    //   portion : 0,
+    //   cost: 0,
+    //   costAmount: 0,
+    //   leftAmount: this.leftAmount
+    // }
+
+    const tempCostAmount = this.costAmount
     // 最新份额 = 上一次的 份额，加最新买入的份额
-    this.portion = latestInvestment.portion + buyTxn.portion
+    this.portion = this.portion + buyTxn.portion
 
     // 买入行为后，持仓成本 = (之前持仓成本金额 + 买入金额) / 基金总份额
-    this.cost = roundToFix( (latestInvestment.costAmount + amount)  / this.portion , 4)
+    this.cost = roundToFix( (tempCostAmount + amount)  / this.portion , 4)
 
     // 买入后从剩余资金扣除
-    this.leftAmount = roundToFix(latestInvestment.leftAmount - amount, 2) 
+    this.leftAmount = roundToFix(this.leftAmount - amount, 2) 
     
     this.calcMaxPrincipal()
     return this
@@ -612,16 +608,16 @@ export class InvestDateSnapshot {
     }
 
     // 上一次快照， 
-    const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
-      portion : 0,
-      cost: 0,
-      costAmount: 0,
-      leftAmount: this.fundStrategy.totalAmount
-    }
+    // const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
+    //   portion : 0,
+    //   cost: 0,
+    //   costAmount: 0,
+    //   leftAmount: this.fundStrategy.totalAmount
+    // }
 
     if(txn === 'all') {
       txn = {
-        portion: latestInvestment.portion
+        portion: this.portion
       }
     }
 
@@ -633,19 +629,19 @@ export class InvestDateSnapshot {
     
 
     // 最新份额 = 上一次的 份额 - 最新卖出的份额
-    this.portion = latestInvestment.portion - sellTxn.portion
+    this.portion = this.portion - sellTxn.portion
     if(this.portion < 0) {
       throw new TypeError('卖出份额不能比持有份额高')
     }
 
     // 卖出行为后，持仓成本 = (之前持仓成本金额 - 卖出金额) / 基金总份额
     // this.cost = (latestInvestment.costAmount - sellTxn.amount)  / this.portion
-    this.cost = latestInvestment.cost
     // 算法参考 https://www.zhihu.com/question/265056524
-    this.returnedProfit = latestInvestment.returnedProfit +  sellTxn.amount / (1/this.profitRate + 1)
+    
+    // this.returnedProfit = latestInvestment.returnedProfit +  sellTxn.amount / (1/this.profitRate + 1)
 
     // 卖出后加到 剩余资产中
-    this.leftAmount = roundToFix( latestInvestment.leftAmount + sellTxn.amount, 2 )
+    this.leftAmount = roundToFix( this.leftAmount + sellTxn.amount, 2 )
     
     this.totalSellAmount = roundToFix( this.totalSellAmount + sellTxn.amount, 2)
     this.dateSellAmount = roundToFix(this.dateSellAmount + sellTxn.amount, 2) 
