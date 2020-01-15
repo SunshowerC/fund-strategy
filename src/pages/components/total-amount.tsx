@@ -22,7 +22,7 @@ import { InvestDateSnapshot } from '@/utils/fund-stragegy';
 
 
 export interface AmountProp {
-  data: InvestDateSnapshot[]
+  data: (InvestDateSnapshot & {origin?: InvestDateSnapshot})[]
   textMap: Record<string, string>
 
   commonProp: {

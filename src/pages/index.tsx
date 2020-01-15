@@ -20,7 +20,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
    * 基金数据查询
    */
   getFundData = async (formData: FundFormObj) => {
-    console.log('基金情书', formData)
+    console.log('基金参数', formData)
 
     const result = await getFundData(formData.fundId, formData.dateRange)
     console.log('result', result)
@@ -39,11 +39,12 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
   }
 
   createInvestStragegy(fundData: FundJson, formData: FundFormObj) {
+    console.log('form', formData)
     const investment = new InvestmentStrategy({
       // fundJson: FundDataJson as FundJson,
       // range: ['2019-01-01', '2019-12-01'],
-      totalAmount: 10000,
-      salary: 10000,
+      totalAmount: formData.totalAmount + formData.purchasedFundAmount,
+      salary: formData.salary,
       
       // buyFeeRate: 0.0015,
       // sellFeeRate: 0.005,
@@ -66,11 +67,13 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
     //   .buy(5000, '2019-08-01')
     //   .sell(2000, '2019-09-01')
     //   .buy(5000, '2019-12-01')
-    investment.fixedInvest({
+    investment
+    .buy(formData.purchasedFundAmount, formData.dateRange[0])
+    .fixedInvest({
       fixedInvestment: {
-        period: 'weekly',
-        amount: 1200,
-        dateOrWeek: 4
+        period: formData.period[0],
+        amount: formData.fixedAmount,
+        dateOrWeek: formData.period[1]
       },
       range: formData.dateRange
     })

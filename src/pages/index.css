@@ -24,3 +24,19 @@
 .list code {
   background: #f7f7f7;
 }
+
+
+.inline {
+  display: inline-block;
+}
+
+.inline-select {
+  display: inline-block;
+  width: 100px !important;
+  margin: 0 10px;
+}
+
+.hint {
+  color: #888888;
+  font-size: 12px;
+}

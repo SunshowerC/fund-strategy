@@ -36,6 +36,9 @@ export interface FixedInvestOption {
 export class InvestmentStrategy {
   totalAmount!: number // 初始资本，存量
   salary!: number // 工资，每月增量资金
+
+
+
   
   /**
    * 当前投资的状态
@@ -63,9 +66,38 @@ export class InvestmentStrategy {
    * 该基金策略下运行的每个交易日的数据
    */
   data: InvestDateSnapshot[] = []
+  /**
+   * 标识日期-数据
+   */
   dataMap: Record<string, InvestDateSnapshot> = {}
 
-  // range!: [string| Date, string| Date]
+  /**
+   * 年化收益率
+   * - 基金折合年化收益率
+   * - 累计年化收益率
+   */
+  get annualizedRate():{
+    fundGrowth: number
+    totalProfit: number
+  } {
+    const len = this.data.length
+    if(len > 0) {
+      const startFund = this.data[0]
+      const endFund = this.data[len - 1]
+      const rangeTime = new Date(endFund.date).getTime() - new Date(startFund.date).getTime()
+      const rangeYear = rangeTime / ONE_DAY / 365
+      
+      return {
+        fundGrowth: roundToFix(Math.pow( 1 + endFund.fundGrowthRate, 1 / rangeYear ) - 1 , 4) ,
+        totalProfit:roundToFix( Math.pow( 1 + endFund.totalProfitRate, 1 / rangeYear ) - 1, 4) ,
+      }
+    } else {
+      return {
+        fundGrowth: 0,
+        totalProfit: 0
+      }
+    }
+  }
 
   /**
    * 基金的长期投资计划
@@ -140,6 +172,7 @@ export class InvestmentStrategy {
    */
   private pushData(investSnap: InvestDateSnapshot) {
     this.data.push(investSnap)
+    // 标识 该日期是否已存在实例
     if(!this.dataMap[investSnap.date]) {
       this.dataMap[investSnap.date] = investSnap
     }
@@ -158,19 +191,14 @@ export class InvestmentStrategy {
       let latestInvestDate = new Date(this.latestInvestment.date).getTime()
       latestInvestDate += ONE_DAY
       while(cur > latestInvestDate) {
-        const invest = new InvestDateSnapshot({
-          fundStrategy: this,
-          date: dateFormat(latestInvestDate)
-        }).buy(0)
+        
+        const invest = this.getSnapshotInstance(latestInvestDate).buy(0)
         // console.log('date', invest.date, invest)
         this.pushData(invest)
         latestInvestDate += ONE_DAY
       }
     }  
-    const invest = new InvestDateSnapshot({
-      fundStrategy: this,
-      date: dateStr
-    }).buy(amount)
+    const invest = this.getSnapshotInstance(dateStr).buy(amount)
 
     this.pushData(invest)
     return this
@@ -190,19 +218,12 @@ export class InvestmentStrategy {
       let latestInvestDate = new Date(this.latestInvestment.date).getTime()
       latestInvestDate += ONE_DAY
       while(cur > latestInvestDate) {
-        const invest = new InvestDateSnapshot({
-          fundStrategy: this,
-          date: dateFormat(latestInvestDate)
-        }).sell({amount: 0})
-
+        const invest = this.getSnapshotInstance(latestInvestDate).sell({amount: 0})
         this.pushData(invest)
         latestInvestDate += ONE_DAY
       }
     }  
-    const invest = new InvestDateSnapshot({
-      fundStrategy: this,
-      date: dateStr
-    })
+    const invest = this.getSnapshotInstance(dateStr)
     if(amount === 'all') {
       invest.sell('all')
     } else {
