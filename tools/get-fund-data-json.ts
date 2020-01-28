@@ -69,7 +69,7 @@ const getFundData = async (fundCode: string|number, size?: number):Promise<FundJ
 /**
  * 保存为 json 文件
  */
-const genrateFundJsonFile = (fundJson:FundJson, filePath: string)=>{
+const genrateFundJsonFile = (fundJson, filePath: string)=>{
   // try {
     fs.writeFileSync(filePath, JSON.stringify(fundJson))
   // } catch (err) {
@@ -82,6 +82,33 @@ const main = async ()=>{
   const list = await getFundData('260108', 1000)
   genrateFundJsonFile(list,  resolve(__dirname,'../src/utils/fund-stragegy/static/景顺长城新兴成长混合260108.json'))
 }
-main()
+
+// 下载上证指数历史 csv 数据： https://query1.finance.yahoo.com/v7/finance/download/000001.SS?period1=1262304000&period2=1579106020&interval=1d&events=history&crumb=t6/7IIwak4j 
+const generateJsonFromCsv = async ()=>{
+  fs.readFile(resolve(__dirname, './sz.csv') , 'utf8', (err, data)=>{
+    if(err) {
+      console.log('err', err)
+    }
+ 
+    const json = data.split('\n').reduce((result, cur, index, arr)=>{
+      // 日期，开盘价，最高价，最低价，收盘价
+      const [date, open, high, low, close] = cur.split(',')
+      
+      if(!date) {
+        return result
+      }
+      result[date] = {
+        date,
+        val: Number(close)
+      }
+      return result
+    }, {})
+
+    genrateFundJsonFile(json,  resolve(__dirname,'../src/utils/fund-stragegy/static/shanghai.json'))
+    
+  })
+  
+}
 
 
+generateJsonFromCsv()

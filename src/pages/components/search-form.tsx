@@ -5,6 +5,8 @@ import moment from 'moment';
 import { dateFormat } from '@/utils/common';
 import { FundInfo, getFundInfo } from '@/utils/fund-stragegy/fetch-fund-data';
 import styles from '../index.css';
+import { StopProfitForm } from './stop-profit-form';
+
 
 const { MonthPicker, RangePicker } = DatePicker;
 const { Option } = Select
@@ -40,6 +42,28 @@ export interface FundFormObj {
    * 已买入基金
    */
   purchasedFundAmount: number
+
+
+  // 止盈策略参数
+  /**
+   * 上证指数
+   */
+  shCompositeIndex: number
+
+  /**
+   * 持有仓位
+   */
+  fundPosition: number
+
+  /**
+   * 是否最高值止盈
+   */
+  sellAtTop: boolean
+
+  /**
+   * 持有收益率大于 xx 时止盈
+   */
+  // profitRate: number
 }
 
 export interface FundSearchProp extends FormComponentProps<FundFormObj> {
@@ -240,9 +264,8 @@ export class InnerSearchForm extends Component<FundSearchProp, {
           </Button>
         </Form.Item>
 
-        {/* 投资策略 */}
-        <Divider orientation="left">止盈策略 </Divider>
-        
+
+        <StopProfitForm form={this.props.form} />
 
 
       </Form>

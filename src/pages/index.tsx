@@ -20,7 +20,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
    * 基金数据查询
    */
   getFundData = async (formData: FundFormObj) => {
-    console.log('基金参数', formData)
+    console.log('基金表单参数', formData)
 
     const result = await getFundData(formData.fundId, formData.dateRange)
     console.log('result', result)
