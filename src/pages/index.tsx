@@ -7,6 +7,9 @@ import { getFundData, FundJson } from '@/utils/fund-stragegy/fetch-fund-data';
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy';
 import { notification } from 'antd';
 import moment from 'moment'
+// TODO: 动态查询实时上证指数数据
+import shangZhengData from '../utils/fund-stragegy/static/shanghai.json'
+import { dateFormat, roundToFix } from '@/utils/common';
 
 
 export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}> {
@@ -35,6 +38,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         message: '基金创建错误',
         description: e.message
       })
+      throw new Error(e)
     }
   }
 
@@ -45,6 +49,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
       // range: ['2019-01-01', '2019-12-01'],
       totalAmount: formData.totalAmount + formData.purchasedFundAmount,
       salary: formData.salary,
+      shangZhengData,
       
       // buyFeeRate: 0.0015,
       // sellFeeRate: 0.005,
@@ -57,7 +62,29 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         rate: 0.05,
         amount: 1000
       },
-      fundJson: fundData 
+      fundJson: fundData,
+      onEachDay(this: InvestmentStrategy, curDate: number){
+        const dateStr  = dateFormat(curDate)
+        const latestInvestment = this.latestInvestment
+        // console.log('this day', dateFormat(curDate), this.annualizedRate.totalProfit)
+        const curSzIndex = this.getFundByDate(dateStr, {
+          origin: shangZhengData
+        })
+
+        // 上证指数大于3000
+        if(curSzIndex.val > 3000) {
+          // console.log('指数大于3000', dateStr)
+        }
+        const level =  roundToFix(latestInvestment.fundAmount / latestInvestment.totalAmount, 2)
+        // 仓位大于
+        if(level > 0.7) {
+          // console.log('仓位大于 7 层', dateStr)
+        }
+
+        if(latestInvestment.maxAccumulatedProfit.date === latestInvestment.date) {
+          console.log('当前收益历史新高', dateStr, latestInvestment.maxAccumulatedProfit.amount)
+        }
+      }
     })
     
     // investment

@@ -22,6 +22,11 @@ export interface FundJson {
 }
 
 /**
+ * 上证指数数据
+ */
+export type ShangZhengData = Record<string, Pick< FundDataItem, 'date'|'val'>>
+
+/**
  * 拉取数据, 260108
  */
 export const getFundData = async (fundCode: string | number, size: number | [any, any]): Promise<FundJson> => {

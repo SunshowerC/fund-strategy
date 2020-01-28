@@ -156,6 +156,7 @@ export class InnerSearchForm extends Component<FundSearchProp, {
     };
     const rangeConfig: GetFieldDecoratorOptions = {
       rules: [{ type: 'array', required: true, message: '请选择时间范围' }],
+      initialValue: [moment([Number(curYear) - 1, curMonth, curDate]), moment([curYear, curMonth, curDate])]
     };
 
     return <Card title="基金选项" style={{

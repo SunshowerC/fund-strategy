@@ -5,7 +5,7 @@
 
 import { FundJson } from "../../../tools/get-fund-data-json"
 import { dateFormat, roundToFix } from "../common"
-import { FundDataItem } from './fetch-fund-data'
+import { FundDataItem, ShangZhengData } from './fetch-fund-data'
 // import FundDataJson from './static/景顺长城新兴成长混合260108.json'
 const ONE_DAY = 24 * 60 * 60 * 1000
 
@@ -37,7 +37,10 @@ export class InvestmentStrategy {
   totalAmount!: number // 初始资本，存量
   salary!: number // 工资，每月增量资金
 
-
+  /**
+   * 定投时，每一天的回调函数
+   */
+  onEachDay!: Function
 
   
   /**
@@ -45,6 +48,10 @@ export class InvestmentStrategy {
    */
   latestInvestment!: InvestDateSnapshot
 
+  /**
+   * 上证指数数据
+   */
+  shangZhengData!: ShangZhengData 
   fundJson!: FundJson // 基金源数据
   
   buyFeeRate: number = 0.0015 // 买入的手续费， 一般是 0.15%
@@ -102,7 +109,7 @@ export class InvestmentStrategy {
   /**
    * 基金的长期投资计划
    */
-  constructor(options: Pick<InvestmentStrategy, 'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'>) {
+  constructor(options: Pick<InvestmentStrategy, 'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'|'shangZhengData'|'onEachDay'>) {
     Object.assign(this, options)
   }
 
@@ -146,6 +153,8 @@ export class InvestmentStrategy {
       } else {
         this.buy(0, curDate)
       }
+
+      this.onEachDay(curDate)
       
       curDate += 24 * 60 * 60 * 1000
     }
@@ -237,12 +246,18 @@ export class InvestmentStrategy {
   /**
    * 根据日期获取对应的基金信息
    */
-  getFundByDate(date: string): FundDataItem {
-    const result = this.fundJson.all[  date ]
+  getFundByDate(date: string, opt?: {
+    origin: Record<string , any>
+  }): FundDataItem {
+    let originData = this.fundJson.all
+    if(opt && opt.origin) {
+      originData = opt.origin
+    }
+    const result = originData[  date ]
     // 如果没有 result， 说明那一天是 非交易日，往更早的日期取值
     if(!result) {
       const previewValidDate = dateFormat( new Date(date).getTime() - 24 * 60 * 60 * 1000)
-      return this.getFundByDate(previewValidDate)
+      return this.getFundByDate(previewValidDate, opt)
     } else {
       return result
     }
@@ -348,6 +363,14 @@ export class InvestDateSnapshot {
    */
   get accumulatedProfit() {
     return roundToFix( this.fundAmount - this.totalBuyAmount + this.totalSellAmount, 2)
+  }
+
+  /**
+   * 某个区间内累计的最大收益
+   */
+  maxAccumulatedProfit!: {
+    date: string
+    amount: number
   }
 
 
@@ -479,12 +502,32 @@ export class InvestDateSnapshot {
     }
 
     this.operate()
+    this.calcMaxAccumulatedProfit()
+  }
+
+  /**
+   * 计算累计的历史最大收益
+   */
+  private calcMaxAccumulatedProfit() {
+    const curMaxProfit = {
+      date: this.date,
+      amount: this.accumulatedProfit
+    }
+    const previousInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1] 
+
+    if(previousInvestment && previousInvestment.maxAccumulatedProfit) {
+      // 比较当前最大，和上一次比较最大值
+      this.maxAccumulatedProfit = previousInvestment.maxAccumulatedProfit.amount > curMaxProfit.amount ? previousInvestment.maxAccumulatedProfit : curMaxProfit
+    } else {
+      // 如果是第一个值，初始化
+      this.maxAccumulatedProfit = curMaxProfit
+    }
   }
 
   /**
    * 该日期基金操作行为
    */
-  operate() {
+  private operate() {
     this.income()
     // TODO: 
     // 分红日？重新计算 成本和 份额。【分红后，收益不变，净值变低。 所以 持仓成本 = 分红后净值/ （profitRate+1）】【份额 = fundAmount / 分红后净值】
