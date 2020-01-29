@@ -27,11 +27,12 @@ const tagColors = ["magenta","red","volcano","orange","gold","lime","green","cya
 
 const SAVED_FORM_KEY = 'saved-fund-form'
 let allSavedConditionStr = localStorage.getItem(SAVED_FORM_KEY) || '{}'
+export const allSavedCondition = JSON.parse(allSavedConditionStr) as StorageSearch
 
 export class SavedSearchCondition extends Component<SavedSearchProp> {
 
   state = {
-    allSavedCondition: JSON.parse(allSavedConditionStr) as StorageSearch
+    allSavedCondition,
   }
 
   private deleteCondition(e: Event, tagName: string) {

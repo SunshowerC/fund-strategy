@@ -57,6 +57,14 @@ export const roundToFix = (num: number|string, fractionDigits: number = 2):numbe
   return Number((Math.round(Number(num) * powNum) / powNum).toFixed(fractionDigits))
 }
 
+/**
+ * 不允许选未来的日期
+ */
+export const disabledFuture = (date) => {
+  const selectDate = new Date(date).getTime()
+  const now = Date.now()
+  return selectDate > now
+}
 
 
 /** 

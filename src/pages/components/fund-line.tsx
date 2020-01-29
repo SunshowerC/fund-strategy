@@ -34,6 +34,23 @@ import { FundValChart } from './fund-val'
 import { RateChart } from './rate'
 import {CommonFundLine} from './common-line'
 
+/**
+ * 数据映射表
+ */
+export const keyTextMap = {
+  totalAmount: '总资产',
+  leftAmount: '剩余可用资金',
+  profitRate: '持有收益率',
+  profit: '持有收益',
+  fundAmount: '基金持有金额',
+  fundVal: '基金净值',
+  fundGrowthRate: '基金涨幅',
+  dateBuyAmount: '买入金额',
+  dateSellAmount: '卖出金额',
+  accumulatedProfit: '累计盈亏',
+  maxPrincipal: '累计本金',
+  totalProfitRate: '累计收益率',
+}
 
 
 export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
@@ -80,20 +97,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         range: [0, 1]
       }
     };
-    const keyTextMap = {
-      totalAmount: '总资产',
-      leftAmount: '剩余可用资金',
-      profitRate: '持有收益率',
-      profit: '持有收益',
-      fundAmount: '基金持有金额',
-      fundVal: '基金净值',
-      fundGrowthRate: '基金涨幅',
-      dateBuyAmount: '买入金额',
-      dateSellAmount: '卖出金额',
-      accumulatedProfit: '累计盈亏',
-      maxPrincipal: '累计本金',
-      totalProfitRate: '累计收益率',
-    }
+    
     console.log('源数据', data)
     return (
       <div >
