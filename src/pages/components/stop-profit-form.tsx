@@ -30,7 +30,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
       {/* 投资策略 */}
       <Divider orientation="left">止盈策略 </Divider>
 
-      <Form.Item {...formItemLayout} label='上证指数'>
+      <Form.Item {...formItemLayout} label='上证指数大于'>
         {getFieldDecorator<FundFormObj>('shCompositeIndex', {
           initialValue: 3000,
         })(
@@ -38,7 +38,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
         )}
       </Form.Item>
 
-      <Form.Item {...formItemLayout} label='持有仓位'>
+      <Form.Item {...formItemLayout} label='持有仓位大于'>
       {getFieldDecorator<FundFormObj>('fundPosition', {
           initialValue: 70,
         })(
@@ -49,7 +49,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
         )}
       </Form.Item>
 
-      <Form.Item {...formItemLayout} label='是否历史最高点止盈'>
+      <Form.Item {...formItemLayout} label='是否收益新高'>
       {getFieldDecorator<FundFormObj>('sellAtTop', {
           initialValue: true,
           valuePropName: 'checked' 

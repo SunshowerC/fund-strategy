@@ -42,11 +42,14 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
     }
   }
 
+  /**
+   * 创建投资策略对象
+   * @param fundData 基金源数据
+   * @param formData 基金表单自定义选项
+   */
   createInvestStragegy(fundData: FundJson, formData: FundFormObj) {
     console.log('form', formData)
     const investment = new InvestmentStrategy({
-      // fundJson: FundDataJson as FundJson,
-      // range: ['2019-01-01', '2019-12-01'],
       totalAmount: formData.totalAmount + formData.purchasedFundAmount,
       salary: formData.salary,
       shangZhengData,
@@ -71,19 +74,20 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
           origin: shangZhengData
         })
 
-        // 上证指数大于3000
-        if(curSzIndex.val > 3000) {
-          // console.log('指数大于3000', dateStr)
-        }
+        
         const level =  roundToFix(latestInvestment.fundAmount / latestInvestment.totalAmount, 2)
-        // 仓位大于
-        if(level > 0.7) {
-          // console.log('仓位大于 7 层', dateStr)
+        
+        if(
+          level > formData.fundPosition/100 // 仓位大于
+          && curSzIndex.val > formData.shCompositeIndex // 上证指数大于 3000
+          && (!formData.sellAtTop || latestInvestment.maxAccumulatedProfit.date === latestInvestment.date)  // 是否是新高收益
+        ) {
+          console.log('止盈点', dateStr)
+          // TODO: 止盈点减仓 10%持有 / 定值
+          this.sell(10000, dateStr)
         }
 
-        if(latestInvestment.maxAccumulatedProfit.date === latestInvestment.date) {
-          console.log('当前收益历史新高', dateStr, latestInvestment.maxAccumulatedProfit.amount)
-        }
+         
       }
     })
     
