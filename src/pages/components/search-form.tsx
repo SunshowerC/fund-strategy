@@ -1,11 +1,12 @@
 import React, { Component, Fragment } from 'react';
-import { Form, DatePicker, TimePicker, Button, Input, Card, Select, InputNumber, Cascader, Divider } from 'antd';
+import { Form, DatePicker, TimePicker, Button, Input, Card, Select, InputNumber, Cascader, Divider, Modal } from 'antd';
 import { WrappedFormUtils, FormComponentProps, GetFieldDecoratorOptions } from 'antd/lib/form/Form';
 import moment from 'moment';
 import { dateFormat } from '@/utils/common';
 import { FundInfo, getFundInfo } from '@/utils/fund-stragegy/fetch-fund-data';
 import styles from '../index.css';
 import { StopProfitForm } from './stop-profit-form';
+import {SavedSearchCondition} from './saved-search'
 
 
 const { MonthPicker, RangePicker } = DatePicker;
@@ -105,7 +106,9 @@ export class InnerSearchForm extends Component<FundSearchProp, {
     }]
   } 
   
-
+  /**
+   * 基金数据搜索
+   */
   handleSearch = async (value) => {
     if (value) {
       const result = await getFundInfo(value)
@@ -134,6 +137,27 @@ export class InnerSearchForm extends Component<FundSearchProp, {
     return selectDate > now
   }
 
+  /**
+   * 当前搜索条件保存成功
+   */
+  // private savedSearchForm = (values: FundFormObj) => {
+    
+  // }
+
+  /**
+   * 更新当前搜索条件
+   */
+  private updateSearchForm = (name:string, values: FundFormObj) => {
+    this.handleSearch(values.fundId)
+
+    this.props.form.setFieldsValue({
+      ...values,
+      dateRange: values.dateRange.map(t => moment(t))
+    })
+    this.props.onSearch(values)
+    
+  }
+
   render() {
 
     const { getFieldDecorator } = this.props.form;
@@ -159,7 +183,9 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       initialValue: [moment([Number(curYear) - 1, curMonth, curDate]), moment([curYear, curMonth, curDate])]
     };
 
-    return <Card title="基金选项" style={{
+    return <Card title="基金选项" 
+    extra={<SavedSearchCondition form={this.props.form}   onSelected={this.updateSearchForm} />}
+    style={{
       textAlign: 'initial',
       margin: '20px 0'
     }} >
@@ -167,7 +193,8 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       <Form {...formItemLayout} onSubmit={this.handleSubmit} >
         <Form.Item label="基金编号">
           {getFieldDecorator<FundFormObj>('fundId', {
-            rules: [{ required: true, message: '请输入基金编号' }]
+            rules: [{ required: true, message: '请输入基金编号' }],
+            // initialValue: '260108'
           })(
             // <Input />
             <Select
