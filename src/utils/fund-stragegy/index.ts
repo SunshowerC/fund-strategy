@@ -529,7 +529,6 @@ export class InvestDateSnapshot {
    */
   private operate() {
     this.income()
-    // TODO: 
     // 分红日？重新计算 成本和 份额。【分红后，收益不变，净值变低。 所以 持仓成本 = 分红后净值/ （profitRate+1）】【份额 = fundAmount / 分红后净值】
     if(this.isBonus) {
       if(this.curFund.isBonusPortion) {

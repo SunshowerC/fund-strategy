@@ -37,18 +37,19 @@ export interface CommonFundLineProp extends AmountProp {
 
 export class CommonFundLine extends Component<CommonFundLineProp> {
   
-  private getTooltipFormat(text: string) {
+  private getTooltipFormat(expr: string) {
     const {formatVal} = this.props
-    return [text, (value: any) => ({
-      name: this.props.textMap[text],
+    const text = this.props.textMap[this.props.y]
+    return [expr, (value: any, legendName: string) => ({
+      name: (legendName || '') + `(${text})`,
       value: formatVal ? formatVal(value) : value,
     })] as [string, any]
   }
 
 
   render() {
-    const { title,subTitle, y, data, textMap, commonProp } = this.props
-    const commonChartProp = commonProp.chart
+    const { title,subTitle, y, data, textMap, commonProp, legendProp } = this.props
+    const commonChartProp = commonProp.chart 
 
       return <div >
       <h1 className="main-title" >
@@ -60,9 +61,7 @@ export class CommonFundLine extends Component<CommonFundLineProp> {
 
       <Chart  data={data}  {...commonChartProp} >
         <Legend
-          itemFormatter={val => {
-            return textMap[val]
-          }}
+          {...(legendProp as any || {})}
         />
         <Axis name="date" /> 
 
@@ -75,8 +74,8 @@ export class CommonFundLine extends Component<CommonFundLineProp> {
           type="line"
           position={'date*' + y}
           size={2}
-          color={COLOR_PLATE_16[0]}
-          tooltip={this.getTooltipFormat(y)}
+          color="name"
+          tooltip={this.getTooltipFormat(`${y}*name`)}
         />
          
       </Chart>

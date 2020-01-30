@@ -32,6 +32,10 @@ export interface AmountProp {
       padding: ChartProps['padding']
     }
   }
+
+  legendProp?: {
+    attachLast: boolean
+  }
 }
 
 export interface AmountState {

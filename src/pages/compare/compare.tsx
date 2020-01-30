@@ -29,10 +29,14 @@ export default class CompareStragegyChart extends Component<{}, CompareStragegyC
     
     const app = new App({})
     const allChartPromi = formObj.stragegyChecked.map(async k => {
-      const curCondition = allSavedCondition[k]
+      const curCondition:FundFormObj = {
+        ...allSavedCondition[k],
+        dateRange: formObj.dateRange
+      }
       const invest = await app.getFundData(curCondition)
       const investmentData: ChartSnapshot[] = invest.data.map(item => {
         return {
+          name: k,
           origin: item,
           totalAmount: item.totalAmount,
           leftAmount: item.leftAmount,

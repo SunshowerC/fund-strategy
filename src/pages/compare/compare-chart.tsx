@@ -38,19 +38,30 @@ export class CompareChart extends Component<CompareChartProp> {
   
 
   render() {
-    const first = this.props.data[0] ? this.props.data[0].data : []
+    const {data} = this.props
+    if(!data || data.length === 0) {
+      return null
+    }
+    const allData = data.reduce<ChartSnapshot[]>((resule, item) => {
+      return [
+        ...resule,
+        ...item.data
+      ]
+    }, [])
+    // const first = this.props.data[0].data
     const {chartList} = this.props
+
     return <div>
       {
         chartList.map((chartProp: any,index) => {
           const prop:CommonFundLineProp = {
             y: chartProp,
-            data: first,
+            data: allData,
             textMap: keyTextMap,
             commonProp,
             formatVal: percentProp.includes(chartProp) ? formatPercentVal : undefined
           }
-        return <CommonFundLine key={index} {...prop} />
+        return <CommonFundLine  key={index} {...prop} />
         })
       }
     </div>
