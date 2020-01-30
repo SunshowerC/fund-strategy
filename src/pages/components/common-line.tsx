@@ -28,14 +28,20 @@ export interface CommonFundLineProp extends AmountProp {
    * y 轴数据属性
    */
   y: string 
+
+  /**
+   * 格式化 tooltip 数据
+   */
+  formatVal?: (val:any)=>any
 }
 
 export class CommonFundLine extends Component<CommonFundLineProp> {
   
   private getTooltipFormat(text: string) {
+    const {formatVal} = this.props
     return [text, (value: any) => ({
       name: this.props.textMap[text],
-      value,
+      value: formatVal ? formatVal(value) : value,
     })] as [string, any]
   }
 

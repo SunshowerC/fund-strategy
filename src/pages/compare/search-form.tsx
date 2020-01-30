@@ -13,12 +13,19 @@ const { RangePicker } = DatePicker;
 let [curYear, curMonth, curDate] = dateFormat(new Date()).split('-').map(Number)
 curMonth = Number(curMonth) - 1
 
+/**
+ * 没有必要进行对比的数据
+ */
+const excludeList: (keyof typeof keyTextMap)[] = ['fundVal', 'dateBuyAmount', 'dateSellAmount']
 
 interface CompareFormProp extends FormComponentProps{
-
+  onSearch: (val: CompareFormObj)=>void
 }
-interface CompareFormObj {
-  checked: string[]
+export interface CompareFormObj {
+  /**
+   * 选择了的策略
+   */
+  stragegyChecked: string[]
 
   /**
    * 要对比的数据
@@ -50,7 +57,7 @@ export class CompareForm extends  Component<CompareFormProp> {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('compare表单', values)
-        // this.props.onSearch(values)
+        this.props.onSearch(values)
       }
     });
   }
@@ -70,7 +77,7 @@ export class CompareForm extends  Component<CompareFormProp> {
       <Form  onSubmit={this.handleSubmit} >
       <Form.Item {...formItemLayout} label="已有基金策略" >
         {
-          getFieldDecorator<CompareFormObj>('checked', {
+          getFieldDecorator<CompareFormObj>('stragegyChecked', {
             rules: [{ required: true, message: '请至少选择一个基金策略' }],
           })(<Checkbox.Group style={{ width: '100%' }}>
             {Object.keys(allSavedCondition).map((tagName,index) => <Checkbox key={index} value={tagName}>{tagName}</Checkbox>)}
@@ -83,7 +90,7 @@ export class CompareForm extends  Component<CompareFormProp> {
           getFieldDecorator<CompareFormObj>('chartChecked', {
             rules: [{ required: true, message: '请至少选择一个数据' }],
           })(<Checkbox.Group style={{ width: '100%' }}>
-            {Object.keys(keyTextMap).map((key,index) => <Checkbox key={index} value={key}>{keyTextMap[key]}</Checkbox>)}
+            {Object.keys(keyTextMap).filter((item:any) => !excludeList.includes(item)).map((key,index) => <Checkbox key={index} value={key}>{keyTextMap[key]}</Checkbox>)}
         </Checkbox.Group>)
         }
         </Form.Item>

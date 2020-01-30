@@ -6,7 +6,7 @@ done 1. 总资产 totalAmount  基金资产 fundAmount 3. 剩余可用资金 lef
 
 done 4. 基金净值 fundVal + 买入红点，卖出蓝点
 done 5. 收益率profitRate + 累计盈亏 profit 
-6. TODO: 仓位 = 资金资产 / 总资产
+done 6. 仓位 = 资金资产 / 总资产
 
 7. 结果值：平均年化收益率， 最大回撤
 */
@@ -33,6 +33,7 @@ import { TotalAmountChart, AmountProp } from './total-amount'
 import { FundValChart } from './fund-val'
 import { RateChart } from './rate'
 import {CommonFundLine} from './common-line'
+import { ChartSnapshot } from '../compare/compare';
 
 /**
  * 数据映射表
@@ -87,7 +88,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         totalProfitRate: item.totalProfitRate
       }
     })
-    let data = investmentData as any as InvestDateSnapshot[]
+    let data = investmentData as any as ChartSnapshot[]
     const cols = {
       date: {
         // x 轴的比例尺

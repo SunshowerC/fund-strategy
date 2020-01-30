@@ -18,11 +18,11 @@ import {
 } from "bizcharts";
 import React from 'react';
 import { COLOR_PLATE_8 } from '@/utils/color';
-import { InvestDateSnapshot } from '@/utils/fund-stragegy';
+import { ChartSnapshot } from '../compare/compare';
 
 
 export interface AmountProp {
-  data: (InvestDateSnapshot & {origin?: InvestDateSnapshot})[]
+  data: ChartSnapshot[]
   textMap: Record<string, string>
 
   commonProp: {

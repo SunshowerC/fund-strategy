@@ -66,6 +66,12 @@ export const disabledFuture = (date) => {
   return selectDate > now
 }
 
+/**
+ * 格式化成百分比字符串
+ */
+export const formatPercentVal = (val: number) => {
+  return roundToFix(val * 100) + '%' 
+}
 
 /** 
  * jsonp 获取数据 

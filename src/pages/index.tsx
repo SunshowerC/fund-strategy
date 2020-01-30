@@ -32,7 +32,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
       formData.dateRange[0] = moment(startDate)
     }
     try {
-      this.createInvestStragegy(result, formData)
+      return this.createInvestStragegy(result, formData)
     } catch(e) {
       notification.error({
         message: '基金创建错误',
@@ -113,6 +113,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
     this.setState({
       fundData: investment.data
     })
+    return investment
   }
   
   render() {
