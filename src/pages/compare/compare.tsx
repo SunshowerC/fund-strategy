@@ -6,6 +6,7 @@ import App from '../index'
 import { allSavedCondition } from '../components/saved-search'
 import { FundFormObj } from '../components/search-form'
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy'
+import { roundToFix } from '@/utils/common'
 
 
 
@@ -13,6 +14,7 @@ import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy'
 
 export type ChartSnapshot = Pick<InvestDateSnapshot,'totalAmount'|'leftAmount'|'date'|'profit'|'profitRate'|'fundAmount'|'fundGrowthRate'|'dateBuyAmount'|'dateSellAmount'|'accumulatedProfit'|'maxPrincipal'|'totalProfitRate'> & {
   fundVal: number,
+  position?: number, // 仓位
   origin: InvestDateSnapshot
 } 
 
@@ -50,8 +52,9 @@ export default class CompareStragegyChart extends Component<{}, CompareStragegyC
           dateSellAmount: item.dateSellAmount,
           accumulatedProfit: item.accumulatedProfit,
           maxPrincipal: item.maxPrincipal,
-          totalProfitRate: item.totalProfitRate
-        }
+          totalProfitRate: item.totalProfitRate,
+          position: roundToFix(item.fundAmount / item.totalAmount) 
+        } as ChartSnapshot
       })
       
       return {

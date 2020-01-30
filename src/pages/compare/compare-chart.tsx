@@ -18,7 +18,7 @@ const commonProp:AmountProp['commonProp'] = {
 /**
  * 需要百分比展示的数据
  */
-const percentProp: (keyof ChartSnapshot)[] = ['fundGrowthRate','profitRate', 'totalProfitRate']
+const percentProp: (keyof ChartSnapshot)[] = ['fundGrowthRate','profitRate', 'totalProfitRate', 'position']
 
 export interface StragegyItem {
   name: string, 

@@ -51,6 +51,7 @@ export const keyTextMap = {
   accumulatedProfit: '累计盈亏',
   maxPrincipal: '累计本金',
   totalProfitRate: '累计收益率',
+  position: '持有仓位'
 }
 
 
