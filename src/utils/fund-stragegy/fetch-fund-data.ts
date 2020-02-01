@@ -6,6 +6,8 @@ import { dateFormat } from '../common'
 // TODO: 使用 fetch-jsonp
 const getJSONP = window['getJSONP']
 
+
+
 export interface FundDataItem {
   date: string
   val: number
@@ -92,6 +94,67 @@ export const getFundData = async (fundCode: string | number, size: number | [any
 
   
 
+
+}
+
+
+export enum IndexFund {
+  ShangZheng = 'zs_000001',
+}
+
+/**
+ * 获取指数基金
+ * */ 
+export const getIndexFundData = async (opt: {
+  code: string, 
+  range: [number|string, number|string]
+}) => {
+  // http://img1.money.126.net/data/hs/kline/day/history/2020/0000001.json
+  /* 数据结构
+  ["20200123",3037.95,2976.53,3045.04,2955.35,27276323400,-2.75]
+  日期，今开，今日收盘价，最高，最低，成交量，跌幅
+   */
+
+  // q.stock.sohu.com/hisHq?code=zs_000001&start=20130930&end=20200201&stat=1&order=D&period=d&rt=jsonp
+  // ["2020-01-23", "3037.95", "2976.53", "-84.23", "-2.75%", "2955.35", "3045.04", "272763232",32749038.00]
+  // 日期，今开，收盘，下跌，跌幅，最低，最高，成交量/手，成交额/万
+  let [start,end] = opt.range.map(item => dateFormat(item, 'yyyyMMdd'))
+  const savedData = JSON.parse(localStorage.getItem(opt.code)||'{}') 
+  const dateList = Object.keys(savedData)
+  const [savedStart, savedEnd] = [dateList[dateList.length-1], dateList[0]]
+  if((new Date(opt.range[0]) >= new Date(savedStart)) && (new Date(opt.range[1]) <= new Date(savedEnd))) {
+    return savedData
+  } else {
+    if(new Date(opt.range[0]) >= new Date(savedStart)) {
+      start = dateFormat(savedEnd, 'yyyyMMdd') 
+    }
+    if(new Date(opt.range[1]) <= new Date(savedEnd)) {
+      end = dateFormat(savedStart, 'yyyyMMdd')  
+    }
+  }
+  return new Promise((resolve)=>{
+    getJSONP(`//q.stock.sohu.com/hisHq?code=${opt.code}&start=${start}&end=${end}&stat=1&order=D&period=d&rt=jsonp`, (res)=>{
+      console.log(`指数基金 响应`, res[0].hq)
+      const list = res[0].hq
+      const indexFundData = list.reduce((result, cur)=>{
+        const [date, ,val] = cur
+        result[date] = {
+          date,
+          val
+        }
+        return result 
+      }, {})
+      
+      const mergedData = {
+        ...savedData,
+        ...indexFundData
+      }
+      localStorage.setItem(opt.code, JSON.stringify(mergedData))
+
+      resolve(mergedData)
+    })
+  })
+  
 
 }
 

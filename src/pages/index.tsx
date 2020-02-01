@@ -3,14 +3,15 @@ import styles from './index.css';
 import { FundChart } from './components/fund-line'
 import { SearchForm, FundFormObj } from './components/search-form'
 import 'antd/dist/antd.css'
-import { getFundData, FundJson } from '@/utils/fund-stragegy/fetch-fund-data';
+import { getFundData, FundJson, getIndexFundData, IndexFund } from '@/utils/fund-stragegy/fetch-fund-data';
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy';
 import { notification } from 'antd';
 import moment from 'moment'
-// TODO: 动态查询实时上证指数数据
-import shangZhengData from '../utils/fund-stragegy/static/shanghai.json'
+// 动态查询实时上证指数数据
+// import shangZhengData from '../utils/fund-stragegy/static/shanghai.json'
 import { dateFormat, roundToFix } from '@/utils/common';
 
+let shangZhengData
 
 export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}> {
   
@@ -25,8 +26,17 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
   getFundData = async (formData: FundFormObj) => {
     console.log('基金表单参数', formData)
 
-    const result = await getFundData(formData.fundId, formData.dateRange)
-    console.log('result', result)
+    const [result, szData] = await Promise.all([
+      getFundData(formData.fundId, formData.dateRange),
+      getIndexFundData({
+        code: IndexFund.ShangZheng,
+        range: formData.dateRange
+      })
+    ]) 
+
+    shangZhengData = szData
+
+    // console.log('result', result)
     const startDate = new Date( Object.keys(result.all).pop()! )
     if(startDate.getTime() > new Date(formData.dateRange[0]).getTime()) {
       formData.dateRange[0] = moment(startDate)
