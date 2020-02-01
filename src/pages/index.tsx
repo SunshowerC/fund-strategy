@@ -83,8 +83,9 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
           && (!formData.sellAtTop || latestInvestment.maxAccumulatedProfit.date === latestInvestment.date)  // 是否是新高收益
         ) {
           console.log('止盈点', dateStr)
-          // TODO: 止盈点减仓 10%持有 / 定值
-          this.sell(10000, dateStr)
+          // 止盈点减仓 10%持有 / 定值
+          const sellAmount = formData.sellUnit === 'amount' ? formData.sellNum : (formData.sellNum / 100 * latestInvestment.fundAmount ).toFixed(2)
+          this.sell(Number(sellAmount), dateStr)
         }
 
          

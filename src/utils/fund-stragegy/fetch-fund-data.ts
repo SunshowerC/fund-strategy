@@ -31,15 +31,17 @@ export type ShangZhengData = Record<string, Pick< FundDataItem, 'date'|'val'>>
  */
 export const getFundData = async (fundCode: string | number, size: number | [any, any]): Promise<FundJson> => {
   const page = 1
-  let pageSize = size
+  let pageSize:number 
   let startDate = '', endDate = ''
   if (Array.isArray(size)) {
     pageSize = (new Date(size[1]).getTime() - new Date(size[0]).getTime()) / 1000 / 60 / 60 / 24
     startDate = dateFormat(new Date(size[0])) 
     endDate = dateFormat(new Date(size[1])) 
+  } else {
+    pageSize = size
   }
 
-  const path = `http://api.fund.eastmoney.com/f10/lsjz?fundCode=${fundCode}&pageIndex=${page}&pageSize=${pageSize}&startDate${startDate}=&endDate=${endDate}&_=${Date.now()}`
+  const path = `http://api.fund.eastmoney.com/f10/lsjz?fundCode=${fundCode}&pageIndex=${page}&pageSize=${Math.floor(pageSize)}&startDate=${startDate}&endDate=${endDate}&_=${Date.now()}`
 
   return new Promise((resolve) => {
     getJSONP(path, (resp) => {

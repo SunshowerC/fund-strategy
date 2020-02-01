@@ -61,6 +61,17 @@ export interface FundFormObj {
    */
   sellAtTop: boolean
 
+
+  /**
+   * 卖出多少
+   */
+  sellNum: number
+
+  /**
+   * 卖出单位
+   */
+  sellUnit: 'amount' | 'fundPercent'
+
   /**
    * 持有收益率大于 xx 时止盈
    */

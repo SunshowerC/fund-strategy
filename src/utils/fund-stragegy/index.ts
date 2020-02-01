@@ -703,11 +703,12 @@ export class InvestDateSnapshot {
     // 此时的 this.fundStrategy.latestInvestment 其实就是 this, 因为 sell() 执行前， latestInvestment 就已经被赋值了
     
 
+    if(this.portion - sellTxn.portion < 0) {
+      console.error('卖出份额不能比持有份额高, 跳过本次卖出')
+    }
     // 最新份额 = 上一次的 份额 - 最新卖出的份额
     this.portion = this.portion - sellTxn.portion
-    if(this.portion < 0) {
-      throw new TypeError('卖出份额不能比持有份额高')
-    }
+    
 
     // 卖出行为后，持仓成本 = (之前持仓成本金额 - 卖出金额) / 基金总份额
     // this.cost = (latestInvestment.costAmount - sellTxn.amount)  / this.portion

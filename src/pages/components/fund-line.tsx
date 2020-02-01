@@ -34,6 +34,7 @@ import { FundValChart } from './fund-val'
 import { RateChart } from './rate'
 import {CommonFundLine} from './common-line'
 import { ChartSnapshot } from '../compare/compare';
+import { roundToFix } from '@/utils/common';
 
 /**
  * 数据映射表
@@ -86,7 +87,8 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         dateSellAmount: item.dateSellAmount,
         accumulatedProfit: item.accumulatedProfit,
         maxPrincipal: item.maxPrincipal,
-        totalProfitRate: item.totalProfitRate
+        totalProfitRate: item.totalProfitRate,
+        position: roundToFix(item.fundAmount / item.totalAmount) 
       }
     })
     let data = investmentData as any as ChartSnapshot[]
@@ -111,6 +113,10 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
 
         <CommonFundLine 
           y='totalAmount'
+          data={data} textMap={keyTextMap} commonProp={this.commonProp} />
+
+        <CommonFundLine 
+          y='position'
           data={data} textMap={keyTextMap} commonProp={this.commonProp} />
       </div>
     );
