@@ -26,7 +26,7 @@ export interface FundJson {
 /**
  * 上证指数数据
  */
-export type ShangZhengData = Record<string, Pick< FundDataItem, 'date'|'val'>>
+// export type ShangZhengData = Record<string, Pick< FundDataItem, 'date'|'val'>>
 
 /**
  * 拉取数据, 260108
@@ -105,7 +105,7 @@ export enum IndexFund {
 /**
  * 指数数据
  */
-interface IndexData {
+export interface IndexData {
   date: string
   val: number
   ema12: number
@@ -142,9 +142,9 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
   let len = indexList.length
   while(--len > -1) {
     const curObj = indexList[len]
-    // if(curObj.ema12 || curObj.ema12 === 0) {
-    //   continue
-    // }
+    if(curObj.ema12 || curObj.ema12 === 0) {
+      continue
+    }
     const previousDate = indexList[len + 1] ? indexList[len + 1].date : undefined
     curObj.ema12 = EMA(curObj.val, 12, {
       previousDate,

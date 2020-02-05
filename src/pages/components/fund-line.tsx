@@ -35,6 +35,7 @@ import { RateChart } from './rate'
 import {CommonFundLine} from './common-line'
 import { ChartSnapshot } from '../compare/compare';
 import { roundToFix } from '@/utils/common';
+import MacdLine from './macd';
 
 /**
  * 数据映射表
@@ -103,8 +104,11 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
     };
     
     console.log('源数据', data)
+    const indexData = (data && data[0]) ? data[0].origin.fundStrategy.indexData : {} as any
     return (
       <div >
+        <MacdLine data={indexData} textMap={keyTextMap} commonProp={this.commonProp} /> 
+
         <FundValChart data={data} textMap={keyTextMap} commonProp={this.commonProp}  />
 
         <RateChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />

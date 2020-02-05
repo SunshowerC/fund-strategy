@@ -60,11 +60,11 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
    * @param formData 基金表单自定义选项
    */
   createInvestStragegy(fundData: FundJson, formData: FundFormObj) {
-    console.log('form', formData)
     const investment = new InvestmentStrategy({
       totalAmount: formData.totalAmount + formData.purchasedFundAmount,
       salary: formData.salary,
       shangZhengData,
+      indexData: shangZhengData,
       
       // buyFeeRate: 0.0015,
       // sellFeeRate: 0.005,

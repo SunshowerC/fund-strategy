@@ -5,7 +5,7 @@
 
 import { FundJson } from "../../../tools/get-fund-data-json"
 import { dateFormat, roundToFix } from "../common"
-import { FundDataItem, ShangZhengData } from './fetch-fund-data'
+import { FundDataItem, IndexData } from './fetch-fund-data'
 // import FundDataJson from './static/景顺长城新兴成长混合260108.json'
 const ONE_DAY = 24 * 60 * 60 * 1000
 
@@ -49,9 +49,14 @@ export class InvestmentStrategy {
   latestInvestment!: InvestDateSnapshot
 
   /**
-   * 上证指数数据
+   * (上证)指数数据
    */
-  shangZhengData!: ShangZhengData 
+  shangZhengData!: Record<string, IndexData> 
+
+  /**
+   * 跟踪指数指标
+   */
+  indexData?: Record<string, IndexData> 
   fundJson!: FundJson // 基金源数据
   
   buyFeeRate: number = 0.0015 // 买入的手续费， 一般是 0.15%
@@ -109,7 +114,7 @@ export class InvestmentStrategy {
   /**
    * 基金的长期投资计划
    */
-  constructor(options: Pick<InvestmentStrategy, 'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'|'shangZhengData'|'onEachDay'>) {
+  constructor(options: Pick<InvestmentStrategy, 'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'|'indexData'|'shangZhengData'|'onEachDay'>) {
     Object.assign(this, options)
   }
 

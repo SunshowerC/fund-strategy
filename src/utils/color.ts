@@ -14,6 +14,7 @@ export const COLOR_PLATE_8 = [
 export const COLOR_NAME = {
   red: COLOR_PLATE_8[7],
   yellow: COLOR_PLATE_8[2],
+  green: COLOR_PLATE_8[1],
 }
 export const COLOR_PLATE_16 = [
   '#1890FF',
