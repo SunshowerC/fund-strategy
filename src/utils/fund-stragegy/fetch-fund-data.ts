@@ -1,7 +1,7 @@
 
 import axios from 'axios'
 import { notification } from 'antd'
-import { dateFormat } from '../common'
+import { dateFormat, roundToFix } from '../common'
 
 // TODO: 使用 fetch-jsonp
 const getJSONP = window['getJSONP']
@@ -103,6 +103,74 @@ export enum IndexFund {
 }
 
 /**
+ * 指数数据
+ */
+interface IndexData {
+  date: string
+  val: number
+  ema12: number
+  ema26: number
+  diff: number
+  // ema9: number 
+  dea: number // dea = ema(diff, 9)
+  macd: number
+}
+
+const EMA = (close:number, days: number, opt: {
+  previousDate?: string,
+  curDate: string,
+  data: Record<string, IndexData>
+}): number => {
+  
+  const {previousDate, curDate} = opt
+  // 如果是首日上市价，那么初始 ema 为首日收盘价
+  if(!previousDate) {
+    return opt.data[curDate].val
+  }
+  const field = days === 9 ? `dea` : `ema${days}`
+  const previousEMA = Number(opt.data[previousDate][field])
+  
+  return  (2*close+(days-1) * previousEMA )/ (days+1)
+}
+
+/**
+ * 计算 macd 值
+ * @param indexDataMap 源数据 map 值
+ */
+export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
+  const indexList = Object.values(indexDataMap)
+  let len = indexList.length
+  while(--len > -1) {
+    const curObj = indexList[len]
+    // if(curObj.ema12 || curObj.ema12 === 0) {
+    //   continue
+    // }
+    const previousDate = indexList[len + 1] ? indexList[len + 1].date : undefined
+    curObj.ema12 = EMA(curObj.val, 12, {
+      previousDate,
+      curDate: curObj.date,
+      data: indexDataMap
+    })
+    curObj.ema26 = EMA(curObj.val, 26, {
+      previousDate,
+      curDate: curObj.date,
+      data: indexDataMap
+    })
+
+    curObj.diff = curObj.ema12 - curObj.ema26
+    curObj.dea = previousDate ? EMA(curObj.diff, 9, {
+      previousDate,
+      curDate: curObj.date,
+      data: indexDataMap
+    }) : 0
+    curObj.macd = 2 * (curObj.diff - curObj.dea)
+  }
+
+  return indexDataMap
+}
+
+
+/**
  * 获取指数基金
  * */ 
 export const getIndexFundData = async (opt: {
@@ -145,10 +213,24 @@ export const getIndexFundData = async (opt: {
         return result 
       }, {})
       
-      const mergedData = {
+      
+      let mergedData = {
         ...savedData,
         ...indexFundData
       }
+      const sortedDates = Object.keys(mergedData).sort((a, b)=> new Date(b).getTime() -  new Date(a).getTime())
+      mergedData = sortedDates.reduce((result, cur)=>{
+        result[cur] = mergedData[cur]
+        return result
+      }, {})
+
+      calcMACD(mergedData)
+      
+
+      // console.log('shangZhengData with eacd', Object.values(mergedData).slice(0, 10), mergedData) 
+
+      
+
       localStorage.setItem(opt.code, JSON.stringify(mergedData))
 
       resolve(mergedData)
@@ -157,6 +239,8 @@ export const getIndexFundData = async (opt: {
   
 
 }
+
+
 
 export interface FundInfo {
   code: string
