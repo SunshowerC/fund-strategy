@@ -26,9 +26,7 @@ import {
   Facet,
   Util
 } from "bizcharts";
-import FundDataJson from '@/utils/fund-stragegy/static/景顺长城新兴成长混合260108.json'
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy/index.ts';
-import { FundJson } from 'tools/get-fund-data-json';
 import { TotalAmountChart, AmountProp } from './total-amount'
 import { FundValChart } from './fund-val'
 import { RateChart } from './rate'
@@ -36,6 +34,7 @@ import {CommonFundLine} from './common-line'
 import { ChartSnapshot } from '../compare/compare';
 import { roundToFix } from '@/utils/common';
 import MacdLine from './macd';
+import { SliderChart } from './slider-chart';
 
 /**
  * 数据映射表
@@ -114,6 +113,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
       return itemDateTime >= new Date(start).getTime() && itemDateTime <= new Date(end).getTime()
     })
     
+    
     return (
       <div >
         <MacdLine data={indexData} textMap={keyTextMap} commonProp={this.commonProp} /> 
@@ -128,9 +128,18 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
           y='totalAmount'
           data={data} textMap={keyTextMap} commonProp={this.commonProp} />
 
+        <SliderChart y='position' data={data.map(item => {
+          return {
+            position: item.position,
+            date: item.date
+          }
+        })} >
         <CommonFundLine 
           y='position'
           data={data} textMap={keyTextMap} commonProp={this.commonProp} />
+        </SliderChart>
+
+        
       </div>
     );
   }

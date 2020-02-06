@@ -3,11 +3,11 @@ import { Form, DatePicker, TimePicker, Button, Input, Card, Select, InputNumber,
 import { WrappedFormUtils, FormComponentProps, GetFieldDecoratorOptions } from 'antd/lib/form/Form';
 import moment from 'moment';
 import { dateFormat } from '@/utils/common';
-import { FundInfo, getFundInfo } from '@/utils/fund-stragegy/fetch-fund-data';
+import { FundInfo, getFundInfo, IndexData } from '@/utils/fund-stragegy/fetch-fund-data';
 import styles from '../index.css';
 import { StopProfitForm } from './stop-profit-form';
 import {SavedSearchCondition} from './saved-search'
-
+import {throttle} from 'lodash'
 
 const { MonthPicker, RangePicker } = DatePicker;
 const { Option } = Select
@@ -76,6 +76,11 @@ export interface FundFormObj {
    * 持有收益率大于 xx 时止盈
    */
   // profitRate: number
+
+  /**
+   * 参考指数
+   */
+  referIndex: Record<string, IndexData>
 }
 
 export interface FundSearchProp extends FormComponentProps<FundFormObj> {
@@ -120,14 +125,14 @@ export class InnerSearchForm extends Component<FundSearchProp, {
   /**
    * 基金数据搜索
    */
-  handleSearch = async (value) => {
+  handleSearch = throttle(async (value) => {
     if (value) {
       const result = await getFundInfo(value)
       this.setState({ searchFundData: result });
     } else {
       this.setState({ searchFundData: [] });
     }
-  }
+  }, 1000)
 
   handleSubmit = e => {
     e.preventDefault();

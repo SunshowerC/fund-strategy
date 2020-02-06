@@ -246,10 +246,16 @@ export const getIndexFundData = async (opt: {
 
 }
 
+
+export interface SearchIndexResp {
+  code: string
+  name: string
+  id: string
+}
 /**
  * 指数动态查询
  */
-export const searchIndex = async (input: string)=>{
+export const searchIndex = async (input: string): Promise<SearchIndexResp[]>=>{
 // http://searchapi.eastmoney.com/api/suggest/get?cb=jQuery112408632397893769632_1580928562563&input=%E4%B8%AD%E8%AF%81%E7%99%BD%E9%85%92&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=1580928562702
 return new Promise((resolve)=>{
   const path = `//searchapi.eastmoney.com/api/suggest/get?input=${input}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=${Date.now()}`
@@ -260,8 +266,8 @@ return new Promise((resolve)=>{
 
     const result = data.map(item => {
       return {
-        code: item.CODE,
-        name: item.NAME,
+        code: item.Code,
+        name: item.Name,
         id: item.QuoteID
       }
     })

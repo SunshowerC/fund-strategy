@@ -1,4 +1,5 @@
-import lodash from 'lodash'
+
+
 
 
 export const dateFormat = (dateInput, format = 'yyyy-MM-dd'):string => {
@@ -82,8 +83,10 @@ window['getJSONP'] = (url: string,callback: Function) => {
 
   if (url.indexOf("?") == -1) {
      url += "?callback=" + cbname;
+     url += "?cb=" + cbname;
   } else {
      url += "&callback=" + cbname;
+     url += "&cb=" + cbname;
   }
 
   var script = document.createElement("script");

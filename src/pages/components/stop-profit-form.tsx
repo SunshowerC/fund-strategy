@@ -2,15 +2,33 @@ import React, { Component, Fragment } from 'react';
 import { FundFormObj } from './search-form';
 import Form, { FormComponentProps } from 'antd/lib/form';
 import { Divider, InputNumber, Switch, Select, Row, Col } from 'antd';
+import { IndexData, searchIndex, SearchIndexResp } from '@/utils/fund-stragegy/fetch-fund-data';
+import {throttle} from 'lodash'
+
+
 const { Option } = Select
 interface StopProfitFormProp {
   // form: 
 }
 
 export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
-
+  state = {
+    searchIndexData:  [] as SearchIndexResp[] 
+  }
+  
+  
+  handleSearchIndex = throttle(async (value)=>{
+    
+    if (value) {
+      const result = await searchIndex(value)
+      this.setState({ searchIndexData: result });
+    } else {
+      this.setState({ searchIndexData: [] });
+    }
+  }, 1000)
 
   render() {
+    const { searchIndexData } = this.state
     const formItemLayout = {
       style: {
         width: 500
@@ -82,6 +100,27 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
           </Col>
         </Row>
       </Form.Item>
+
+      <Form.Item {...formItemLayout} label="指数编号/名称">
+          {getFieldDecorator<FundFormObj>('referIndex', {
+            // rules: [{ required: true, message: '请输入指数名称' }],
+            // initialValue: '260108'
+          })(
+            // <Input />
+            <Select
+              showSearch
+              placeholder="输入基金名称或基金编号"
+              defaultActiveFirstOption={false}
+              showArrow={false}
+              filterOption={false}
+              onSearch={this.handleSearchIndex}
+              // onChange={this.handleChange}
+              notFoundContent={null}
+            >
+              {searchIndexData.map((d, index) => <Option key={d.id}>{d.name}[{d.code}]</Option>)}
+            </Select>
+          )}
+        </Form.Item>
     </Fragment>
   }
 }
