@@ -18,7 +18,7 @@ import {
   ChartProps
 } from "bizcharts";
 import React from 'react';
-import { COLOR_PLATE_16, COLOR_PLATE_8 } from '@/utils/color';
+import { COLOR_PLATE_16, COLOR_PLATE_8, COLOR_NAME } from '@/utils/color';
 import { roundToFix } from '@/utils/common';
 
 export class FundValChart extends Component<AmountProp> {
@@ -159,7 +159,7 @@ export class FundValChart extends Component<AmountProp> {
             lineWidth: 2,
             fill(dateBuyAmount: number, dateSellAmount: number) {
               if(dateSellAmount > 0){
-                return COLOR_PLATE_8[2]
+                return COLOR_NAME.green
               } else if (dateBuyAmount > 0) {
                 return COLOR_PLATE_8[7]
               } else {

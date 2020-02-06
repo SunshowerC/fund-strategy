@@ -183,6 +183,12 @@ export const getIndexFundData = async (opt: {
   日期，今开，今日收盘价，最高，最低，成交量，跌幅
    */
 
+  /**
+   * http://60.push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.399997&fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&klt=101&fqt=0&beg=20160205&end=20200205&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=cb30944405113958
+   * 响应： "2020-02-06,7386.27,7452.25,7461.18,7302.34,1936321,14723348992.00"
+   * 时间，今开，今收，最高，最低，成交量/手，成交额
+   */ 
+
   // q.stock.sohu.com/hisHq?code=zs_000001&start=20130930&end=20200201&stat=1&order=D&period=d&rt=jsonp
   // ["2020-01-23", "3037.95", "2976.53", "-84.23", "-2.75%", "2955.35", "3045.04", "272763232",32749038.00]
   // 日期，今开，收盘，下跌，跌幅，最低，最高，成交量/手，成交额/万
@@ -240,12 +246,38 @@ export const getIndexFundData = async (opt: {
 
 }
 
+/**
+ * 指数动态查询
+ */
+export const searchIndex = async (input: string)=>{
+// http://searchapi.eastmoney.com/api/suggest/get?cb=jQuery112408632397893769632_1580928562563&input=%E4%B8%AD%E8%AF%81%E7%99%BD%E9%85%92&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=1580928562702
+return new Promise((resolve)=>{
+  const path = `//searchapi.eastmoney.com/api/suggest/get?input=${input}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=${Date.now()}`
 
+  getJSONP(path, (resp) => {
+    let data = resp.QuotationCodeTable.Data || []
+    data = data.filter(item => item.Classify === 'Index')
+
+    const result = data.map(item => {
+      return {
+        code: item.CODE,
+        name: item.NAME,
+        id: item.QuoteID
+      }
+    })
+
+    resolve(result)
+  })
+})
+}
 
 export interface FundInfo {
   code: string
   name: string
 }
+/**
+ * 基金动态查询
+ */
 export const getFundInfo = async (key):Promise<FundInfo[]>=>{
   return new Promise((resolve)=>{
     const path = `https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m=10&t=700&IsNeedBaseInfo=0&IsNeedZTInfo=0&key=${key}&_=${Date.now()}`

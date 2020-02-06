@@ -70,7 +70,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
   }
 
   render() {
-
+    
     const investmentData = this.props.data.map(item => {
       return {
         // ...item,
@@ -102,9 +102,18 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         range: [0, 1]
       }
     };
-    
+    if(!(data && data[0])) {
+      return null
+    }
+
     console.log('源数据', data)
-    const indexData = (data && data[0]) ? data[0].origin.fundStrategy.indexData : {} as any
+    const [start, end] = [data[0].origin.date, data[data.length - 1].origin.date]
+    // 过滤出当前时间范围的 数据
+    const indexData = Object.values(data[0].origin.fundStrategy.indexData!).filter(item => {
+      const itemDateTime = new Date(item.date).getTime()
+      return itemDateTime >= new Date(start).getTime() && itemDateTime <= new Date(end).getTime()
+    })
+    
     return (
       <div >
         <MacdLine data={indexData} textMap={keyTextMap} commonProp={this.commonProp} /> 

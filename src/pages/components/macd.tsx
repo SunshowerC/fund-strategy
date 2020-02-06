@@ -1,26 +1,36 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
 import { AmountProp } from './total-amount'
-import { Chart, Axis, Tooltip, Geom } from 'bizcharts'
+import { Chart, Axis, Tooltip, Geom, Legend } from 'bizcharts'
 import { IndexData } from '@/utils/fund-stragegy/fetch-fund-data'
 import { COLOR_NAME } from '@/utils/color'
-import { roundToFix } from '@/utils/common'
+import { roundToFix, dateFormat } from '@/utils/common'
+import Slider from "bizcharts-plugin-slider";
+import DataSet from "@antv/data-set";
+import { CommonFundLine } from './common-line'
 
 
 interface MacdLineProp extends Omit<AmountProp, 'data'> {
-  data: Record<string, IndexData>
+  data: IndexData[]
   title?: string
 }
 
 // type MacdLineProp = Omit<AmountProp, 'data'> & {
 //   data: Record<string, IndexData>
 // }
-
+const ONE_YEAR = 365 * 24 * 3600 * 1000
 export default class MacdLine extends Component<MacdLineProp> {
+  ds = new DataSet({
+    state: {
+      start: dateFormat(Date.now() - 365 * 24 * 3600 * 1000),
+      end: dateFormat(Date.now())
+    }
+  });
 
   getDataList() {
-    const result =  Object.values(this.props.data).slice(0,100)
-    let min = 0,max = 0
+    const result = this.props.data
+    let min = 0, max = 0
     result.forEach(item => {
+      item.val = Number(item.val)
       item.macd = roundToFix(item.macd, 2)
       item.diff = roundToFix(item.diff, 2)
       item.dea = roundToFix(item.dea, 2)
@@ -28,13 +38,23 @@ export default class MacdLine extends Component<MacdLineProp> {
       min = min < curMin ? min : curMin
       max = max > curMax ? max : curMax
     })
-    return {result, min, max}
+    return { result, min, max }
+  }
+
+  sliderTimeChange = (obj: {startText: string,endText: string})=>{
+    const { startText, endText } = obj;
+    this.ds.setState("start", startText);
+    this.ds.setState("end", endText);
   }
 
   render() {
-    const {  textMap, commonProp, title } = this.props
-    const commonChartProp = commonProp.chart
-    const {result: data, min, max} = this.getDataList()
+    let { textMap, commonProp, title } = this.props
+    textMap = {...textMap, val: '指数' }
+    const macdChartProp = {
+      ...commonProp.chart,
+      height: 300
+    }
+    const { result: data, min, max } = this.getDataList()
     console.log('macd line', data)
     const commonLineScale = {
       min,
@@ -48,25 +68,70 @@ export default class MacdLine extends Component<MacdLineProp> {
       diff: commonLineScale,
       dea: commonLineScale,
     }
-    return <div >
-      <h1 className="main-title" >
-        {title} MACD 趋势图
-      </h1>
-      <Chart  data={data} scale={scale}  {...commonChartProp} >
-          <Axis name='date' />
-          <Axis name='macd' />
-          <Axis name="diff" visible={false} />
-          <Axis name="dea" visible={false} />
+    const ds = this.ds
+    const oneYearAgoDate = dateFormat(new Date(data[0].date).getTime() - ONE_YEAR)
+    this.sliderTimeChange({
+      startText: data[data.length - 1].date > oneYearAgoDate ? data[data.length - 1].date : oneYearAgoDate,
+      endText: data[0].date
+    })
 
-          <Tooltip />
-          <Geom type='interval' 
-            color={['macd', (macd)=>{
-              return macd > 0 ? COLOR_NAME.red : COLOR_NAME.green
-            }]}
-                position='date*macd' />
-          <Geom type='line' position='date*diff' color={COLOR_NAME.yellow} />
-          <Geom type='line' position='date*dea' color={COLOR_NAME.blue} />
+    // 数据格式化
+    const dv = ds.createView();
+    dv.source(data)
+      .transform({
+        // 过滤出 slider 的时间范围的数据
+        type: "filter",
+        callback: obj => {
+          const date = obj.date;
+          return date <= ds.state.end && date >= ds.state.start;
+        }
+      })
+    
+    return <div >
+      {/* <h1 className="main-title" >
+        {title} MACD 趋势图
+      </h1> */}
+       
+      <CommonFundLine 
+          y='val'
+          data={dv as any} textMap={textMap} commonProp={commonProp} />
+
+      <Chart data={dv} scale={scale}  {...macdChartProp} >
+        {/* <Legend /> */}
+        <Axis name='date' />
+        <Axis name='macd' />
+        <Axis name="diff" visible={false} />
+        <Axis name="dea" visible={false} />
+
+        <Tooltip />
+        <Geom type='interval'
+          color={['macd', (macd) => {
+            return macd > 0 ? COLOR_NAME.red : COLOR_NAME.green
+          }]}
+          position='date*macd' />
+        <Geom type='line' position='date*diff' color={COLOR_NAME.yellow} />
+        <Geom type='line' position='date*dea' color={COLOR_NAME.blue} />
       </Chart>
+
+      <div>
+        <Slider
+          padding={[20, 40, 20, 40]}
+          width="auto"
+          height={26}
+          start={ds.state.start}
+          end={ds.state.end}
+          xAxis="date"
+          yAxis="macd"
+          scales={{
+            time: {
+              type: "timeCat",
+              nice: false
+            }
+          }}
+          data={data}
+          onChange={this.sliderTimeChange}
+        />
+      </div>
     </div>
   }
 }
