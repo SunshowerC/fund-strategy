@@ -1,13 +1,13 @@
 import React, { Component, Fragment } from 'react';
-import { Form, DatePicker, TimePicker, Button, Input, Card, Select, InputNumber, Cascader, Divider, Modal } from 'antd';
+import { Form, DatePicker, TimePicker, Button, Input, Card, Select, InputNumber, Cascader, Divider, Modal, Row, Col } from 'antd';
 import { WrappedFormUtils, FormComponentProps, GetFieldDecoratorOptions } from 'antd/lib/form/Form';
 import moment from 'moment';
 import { dateFormat } from '@/utils/common';
 import { FundInfo, getFundInfo, IndexData } from '@/utils/fund-stragegy/fetch-fund-data';
 import styles from '../index.css';
 import { StopProfitForm } from './stop-profit-form';
-import {SavedSearchCondition} from './saved-search'
-import {throttle} from 'lodash'
+import { SavedSearchCondition } from './saved-search'
+import { throttle } from 'lodash'
 
 const { MonthPicker, RangePicker } = DatePicker;
 const { Option } = Select
@@ -102,15 +102,15 @@ export class InnerSearchForm extends Component<FundSearchProp, {
     }
   })
 
-  private monthOpt = Array(28).fill('').map((item,index) => {
+  private monthOpt = Array(28).fill('').map((item, index) => {
     return {
-      value: index+1 as any as string,
+      value: index + 1 as any as string,
       label: `${index + 1}号`
     }
   })
 
 
-  get periodOpts()  {
+  get periodOpts() {
     return [{
       value: 'weekly',
       label: '每周',
@@ -120,8 +120,8 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       label: '每月',
       children: this.monthOpt
     }]
-  } 
-  
+  }
+
   /**
    * 基金数据搜索
    */
@@ -157,13 +157,13 @@ export class InnerSearchForm extends Component<FundSearchProp, {
    * 当前搜索条件保存成功
    */
   // private savedSearchForm = (values: FundFormObj) => {
-    
+
   // }
 
   /**
    * 更新当前搜索条件
    */
-  private updateSearchForm = (name:string, values: FundFormObj) => {
+  private updateSearchForm = (name: string, values: FundFormObj) => {
     this.handleSearch(values.fundId)
 
     this.props.form.setFieldsValue({
@@ -171,7 +171,7 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       dateRange: values.dateRange.map(t => moment(t))
     })
     this.props.onSearch(values)
-    
+
   }
 
   render() {
@@ -199,15 +199,21 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       initialValue: [moment([Number(curYear) - 1, curMonth, curDate]), moment([curYear, curMonth, curDate])]
     };
 
-    return <Card title="基金选项" 
-    extra={<SavedSearchCondition form={this.props.form}   onSelected={this.updateSearchForm} />}
-    style={{
-      textAlign: 'initial',
-      margin: '20px 0'
-    }} >
+    const colProp = {
+      span: 24,
+      lg: 12,
+      xxl: 8
+    }
 
-      <Form {...formItemLayout} onSubmit={this.handleSubmit} >
-        <Form.Item label="基金编号">
+    return <Card title="基金选项"
+      extra={<SavedSearchCondition form={this.props.form} onSelected={this.updateSearchForm} />}
+      style={{
+        textAlign: 'initial',
+        margin: '20px 0'
+      }} >
+
+      <Form  onSubmit={this.handleSubmit} >
+        <Form.Item {...formItemLayout} label="基金编号">
           {getFieldDecorator<FundFormObj>('fundId', {
             rules: [{ required: true, message: '请输入基金编号' }],
             // initialValue: '260108'
@@ -228,7 +234,7 @@ export class InnerSearchForm extends Component<FundSearchProp, {
           )}
         </Form.Item>
 
-        <Form.Item label="时间范围">
+        <Form.Item {...formItemLayout} label="时间范围">
           {getFieldDecorator<FundFormObj>('dateRange', rangeConfig)(
             <RangePicker
               placeholder={['开始时间', '结束时间']}
@@ -242,76 +248,79 @@ export class InnerSearchForm extends Component<FundSearchProp, {
         </Form.Item>
 
         {/* 投资策略 */}
-        <Divider orientation="left">投资策略 <span className={styles.hint}>默认[分红方式：红利复投][买入费率:0.15%][卖出费率0.5%]</span></Divider>
-        <Form.Item label="初始本金">
-        {getFieldDecorator<FundFormObj>('totalAmount', {
-          initialValue: 10000,
-          rules: [{required: true, message: '请输入本金'}]
-        })(
-          <InputNumber style={{width: '100%'}} min={0}  />
-        )}
-        </Form.Item>
+        <Row >
+          <Col {...colProp} >
+            <Divider orientation="left">投资策略 <span className={styles.hint}>默认[分红方式：红利复投][买入费率:0.15%][卖出费率0.5%]</span></Divider>
+            <Form.Item {...formItemLayout} label="初始本金">
+              {getFieldDecorator<FundFormObj>('totalAmount', {
+                initialValue: 10000,
+                rules: [{ required: true, message: '请输入本金' }]
+              })(
+                <InputNumber style={{ width: '100%' }} min={0} />
+              )}
+            </Form.Item>
 
-        <Form.Item label="月工资[每月增量资金]">
-        {getFieldDecorator<FundFormObj>('salary', {
-          initialValue: 10000,
-          rules: [{required: true, message: '请输入月工资'}]
-        })(
-          <InputNumber style={{width: '100%'}} min={0}  />
-        )}
-        </Form.Item>
+            <Form.Item {...formItemLayout} label="月工资[每月增量资金]">
+              {getFieldDecorator<FundFormObj>('salary', {
+                initialValue: 10000,
+                rules: [{ required: true, message: '请输入月工资' }]
+              })(
+                <InputNumber style={{ width: '100%' }} min={0} />
+              )}
+            </Form.Item>
 
-        <Form.Item label="初始持有基金金额">
-        {getFieldDecorator<FundFormObj>('purchasedFundAmount', {
-          initialValue: 0,
-          rules: [{required: true, message: '输入持有基金金额, 从0开始定投则填0'}]
-        })(
-          <InputNumber style={{width: '100%'}} min={0} placeholder="投资开始时持有的基金金额"  />
-        )}
-        </Form.Item>
+            <Form.Item {...formItemLayout} label="初始持有基金金额">
+              {getFieldDecorator<FundFormObj>('purchasedFundAmount', {
+                initialValue: 0,
+                rules: [{ required: true, message: '输入持有基金金额, 从0开始定投则填0' }]
+              })(
+                <InputNumber style={{ width: '100%' }} min={0} placeholder="投资开始时持有的基金金额" />
+              )}
+            </Form.Item>
 
-        <Form.Item label="定投金额">
-        {getFieldDecorator<FundFormObj>('fixedAmount', {
-          rules: [{required: true, message: '输入定投金额'}],
-          initialValue: 1000,
-        })(
-          <InputNumber style={{width: '100%'}} min={0}  />
-        )}
-        </Form.Item>
+            <Form.Item {...formItemLayout} label="定投金额">
+              {getFieldDecorator<FundFormObj>('fixedAmount', {
+                rules: [{ required: true, message: '输入定投金额' }],
+                initialValue: 1000,
+              })(
+                <InputNumber style={{ width: '100%' }} min={0} />
+              )}
+            </Form.Item>
 
-        <Form.Item label="定投周期">
-        {getFieldDecorator<FundFormObj>('period', {
-          initialValue: ['monthly', 1],
-          rules: [{required: true, }],
-        })(
-          <Cascader options={this.periodOpts} placeholder="选择定投周期" />,
-        )}
-         
-        </Form.Item>
+            <Form.Item {...formItemLayout} label="定投周期">
+              {getFieldDecorator<FundFormObj>('period', {
+                initialValue: ['monthly', 1],
+                rules: [{ required: true, }],
+              })(
+                <Cascader options={this.periodOpts} placeholder="选择定投周期" />,
+              )}
 
-        
+            </Form.Item>
 
-        <Form.Item wrapperCol={{
-          sm: {
-            span: 16,
-            offset: 8
-          }
-        }}>
-          <Button type="primary" htmlType="submit">
-            查询
+
+
+            <Form.Item  wrapperCol={{
+              sm: {
+                span: 16,
+                offset: 8
+              }
+            }}>
+              <Button type="primary" htmlType="submit">
+                查询
           </Button>
 
-          <Button style={{
-            marginLeft: 20
-          }} onClick={this.reset} >
-            重置
+              <Button style={{
+                marginLeft: 20
+              }} onClick={this.reset} >
+                重置
           </Button>
-        </Form.Item>
+            </Form.Item>
+          </Col>
 
-
-        <StopProfitForm form={this.props.form} />
-
-
+          <Col {...colProp}>
+          <StopProfitForm form={this.props.form} />
+          </Col>
+        </Row>
       </Form>
     </Card>
   }

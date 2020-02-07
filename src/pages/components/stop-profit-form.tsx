@@ -47,7 +47,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
     // 最大止盈卖出
     const maxSell = fieldsVal.sellUnit === 'fundPercent' ? 100 : undefined
 
-    return <Fragment>
+    return <section>
       {/* 投资策略 */}
       <Divider orientation="left">止盈策略 </Divider>
 
@@ -109,7 +109,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
             // <Input />
             <Select
               showSearch
-              placeholder="输入基金名称或基金编号"
+              placeholder="输入指数名称或编号"
               defaultActiveFirstOption={false}
               showArrow={false}
               filterOption={false}
@@ -121,6 +121,6 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
             </Select>
           )}
         </Form.Item>
-    </Fragment>
+    </section>
   }
 }
