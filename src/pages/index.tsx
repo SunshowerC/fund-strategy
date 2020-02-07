@@ -128,7 +128,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         amount: formData.fixedAmount,
         dateOrWeek: formData.period[1]
       },
-      range: formData.dateRange
+      range: [dateFormat(formData.dateRange[0]), dateFormat(formData.dateRange[1])]
     })
     console.log('investment', investment)
     

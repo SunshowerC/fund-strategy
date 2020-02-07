@@ -114,6 +114,8 @@ export interface IndexData {
   // ema9: number 
   dea: number // dea = ema(diff, 9)
   macd: number
+
+  macdPosition: number // 当前 macd 百分位
 }
 
 const EMA = (close: number, days: number, opt: {
@@ -131,6 +133,43 @@ const EMA = (close: number, days: number, opt: {
   const previousEMA = Number(opt.data[previousDate][field])
 
   return (2 * close + (days - 1) * previousEMA) / (days + 1)
+}
+
+
+/**
+ * 计算 macd 百分位
+ * @param indexData - 指数数据 
+ */
+const calcMacdPosition = (indexData: IndexData[])=>{
+  let indexDataGroups: IndexData[][] = []
+  indexData.reduce((previousItem, curItem)=>{
+    const isSameSide = previousItem.macd * curItem.macd
+    if(previousItem.macd === 0) {
+      indexDataGroups.push([curItem])
+      return curItem
+    }
+
+    if(isSameSide < 0) {
+      // 不同边的 macd 时，创建一个新的 group
+      indexDataGroups.push([curItem])
+    } else {
+      // 同一边的 macd
+      indexDataGroups[indexDataGroups.length - 1].push(curItem) 
+    }
+    
+    return curItem
+  })
+  
+  // 第一天的 macd 是 0
+  indexData[0].macdPosition = 0
+
+  indexDataGroups.forEach((curIndexGroup)=>{
+    const maxMacd = Math.max(...curIndexGroup.map(item => Math.abs(item.macd)))
+    curIndexGroup.forEach(item => {
+      const position = Math.abs(item.macd) / maxMacd
+      item.macdPosition = roundToFix(position)
+    })
+  })
 }
 
 /**
@@ -166,8 +205,11 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
     curObj.macd = 2 * (curObj.diff - curObj.dea)
   })
 
+  calcMacdPosition(indexList)
+
   return indexDataMap
 }
+
 
 
 /**
@@ -256,7 +298,9 @@ export const getIndexFundData = async (opt: {
 
 }
 
-
+/**
+ * 指数信息对象
+ */
 export interface SearchIndexResp {
   code: string
   name: string
@@ -287,6 +331,9 @@ export const searchIndex = async (input: string): Promise<SearchIndexResp[]> => 
   })
 }
 
+/**
+ * 基金对象信息
+ */
 export interface FundInfo {
   code: string
   name: string
