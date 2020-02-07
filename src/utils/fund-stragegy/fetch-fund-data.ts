@@ -33,12 +33,12 @@ export interface FundJson {
  */
 export const getFundData = async (fundCode: string | number, size: number | [any, any]): Promise<FundJson> => {
   const page = 1
-  let pageSize:number 
+  let pageSize: number
   let startDate = '', endDate = ''
   if (Array.isArray(size)) {
     pageSize = (new Date(size[1]).getTime() - new Date(size[0]).getTime()) / 1000 / 60 / 60 / 24
-    startDate = dateFormat(new Date(size[0])) 
-    endDate = dateFormat(new Date(size[1])) 
+    startDate = dateFormat(new Date(size[0]))
+    endDate = dateFormat(new Date(size[1]))
   } else {
     pageSize = size
   }
@@ -56,7 +56,7 @@ export const getFundData = async (fundCode: string | number, size: number | [any
       // 分红送配 FHFCZ  bonus
       // FHSP: "每份基金份额折算1.020420194份"
 
-      let previousItem 
+      let previousItem
       const formatResult = historyVal.reduce((result, item) => {
         const curFundObj: FundDataItem = {
           date: item.FSRQ,
@@ -65,14 +65,14 @@ export const getFundData = async (fundCode: string | number, size: number | [any
           growthRate: item.JZZZL,
           bonus: item.FHFCZ
         }
-        
+
         result.all[curFundObj.date] = curFundObj
 
         if (curFundObj.bonus) {
           result.bonus[curFundObj.date] = curFundObj
-          
+
           // 分红分为 分红派送，以及份额折算两种
-          if((item.FHSP as string).startsWith('每份基金份额折算')) {
+          if ((item.FHSP as string).startsWith('每份基金份额折算')) {
             curFundObj.isBonusPortion = true
             // curFundObj.bonus = previousItem.val * (1 + curFundObj.growthRate / 100) * (1 - 1 / curFundObj.bonus)
           }
@@ -90,16 +90,16 @@ export const getFundData = async (fundCode: string | number, size: number | [any
     })
 
   })
-  
 
-  
+
+
 
 
 }
 
 
 export enum IndexFund {
-  ShangZheng = 'zs_000001',
+  ShangZheng = '1.000001',
 }
 
 /**
@@ -116,21 +116,21 @@ export interface IndexData {
   macd: number
 }
 
-const EMA = (close:number, days: number, opt: {
+const EMA = (close: number, days: number, opt: {
   previousDate?: string,
   curDate: string,
   data: Record<string, IndexData>
 }): number => {
-  
-  const {previousDate, curDate} = opt
+
+  const { previousDate, curDate } = opt
   // 如果是首日上市价，那么初始 ema 为首日收盘价
-  if(!previousDate) {
+  if (!previousDate) {
     return opt.data[curDate].val
   }
   const field = days === 9 ? `dea` : `ema${days}`
   const previousEMA = Number(opt.data[previousDate][field])
-  
-  return  (2*close+(days-1) * previousEMA )/ (days+1)
+
+  return (2 * close + (days - 1) * previousEMA) / (days + 1)
 }
 
 /**
@@ -139,13 +139,13 @@ const EMA = (close:number, days: number, opt: {
  */
 export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
   const indexList = Object.values(indexDataMap)
-  let len = indexList.length
-  while(--len > -1) {
-    const curObj = indexList[len]
-    if(curObj.ema12 || curObj.ema12 === 0) {
-      continue
+
+  indexList.forEach((item, index) => {
+    const curObj = item
+    if (curObj.ema12 || curObj.ema12 === 0) {
+      return
     }
-    const previousDate = indexList[len + 1] ? indexList[len + 1].date : undefined
+    const previousDate = indexList[index - 1] ? indexList[index - 1].date : undefined
     curObj.ema12 = EMA(curObj.val, 12, {
       previousDate,
       curDate: curObj.date,
@@ -164,7 +164,7 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
       data: indexDataMap
     }) : 0
     curObj.macd = 2 * (curObj.diff - curObj.dea)
-  }
+  })
 
   return indexDataMap
 }
@@ -172,10 +172,10 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
 
 /**
  * 获取指数基金
- * */ 
+ * */
 export const getIndexFundData = async (opt: {
-  code: string, 
-  range: [number|string, number|string]
+  code: string,
+  range: [number | string, number | string]
 }) => {
   // http://img1.money.126.net/data/hs/kline/day/history/2020/0000001.json
   /* 数据结构
@@ -187,62 +187,72 @@ export const getIndexFundData = async (opt: {
    * http://60.push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.399997&fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&klt=101&fqt=0&beg=20160205&end=20200205&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=cb30944405113958
    * 响应： "2020-02-06,7386.27,7452.25,7461.18,7302.34,1936321,14723348992.00"
    * 时间，今开，今收，最高，最低，成交量/手，成交额
-   */ 
+   */
 
   // q.stock.sohu.com/hisHq?code=zs_000001&start=20130930&end=20200201&stat=1&order=D&period=d&rt=jsonp
   // ["2020-01-23", "3037.95", "2976.53", "-84.23", "-2.75%", "2955.35", "3045.04", "272763232",32749038.00]
   // 日期，今开，收盘，下跌，跌幅，最低，最高，成交量/手，成交额/万
-  let [start,end] = opt.range.map(item => dateFormat(item, 'yyyyMMdd'))
-  const savedData = JSON.parse(localStorage.getItem(opt.code)||'{}') 
+  let [start, end] = opt.range.map(item => dateFormat(item))
+  const savedData = JSON.parse(localStorage.getItem(opt.code) || '{}')
   const dateList = Object.keys(savedData)
-  const [savedStart, savedEnd] = [dateList[dateList.length-1], dateList[0]]
-  if((new Date(opt.range[0]) >= new Date(savedStart)) && (new Date(opt.range[1]) <= new Date(savedEnd))) {
-    return savedData
+  const [savedStart, savedEnd] = [dateList[0], dateList[dateList.length - 1]]
+
+  // 如果之前没有该指数数据，拉取全部数据
+  if (dateList.length === 0) {
+    start = '19900101'
+    end = dateFormat(Date.now())
   } else {
-    if(new Date(opt.range[0]) >= new Date(savedStart)) {
-      start = dateFormat(savedEnd, 'yyyyMMdd') 
-    }
-    if(new Date(opt.range[1]) <= new Date(savedEnd)) {
-      end = dateFormat(savedStart, 'yyyyMMdd')  
+    // 增量更新时间范围的 指数数据
+    if ((new Date(opt.range[0]) >= new Date(savedStart)) && (new Date(opt.range[1]) <= new Date(savedEnd))) {
+      return savedData
+    } else {
+      if (new Date(opt.range[0]) >= new Date(savedStart)) {
+        start = savedEnd
+      }
+      if (new Date(opt.range[1]) <= new Date(savedEnd)) {
+        end = savedStart
+      }
     }
   }
-  return new Promise((resolve)=>{
-    getJSONP(`//q.stock.sohu.com/hisHq?code=${opt.code}&start=${start}&end=${end}&stat=1&order=D&period=d&rt=jsonp`, (res)=>{
-      console.log(`指数基金 响应`, res[0].hq)
-      const list = res[0].hq
-      const indexFundData = list.reduce((result, cur)=>{
-        const [date, ,val] = cur
+  return new Promise((resolve) => {
+    getJSONP(`//60.push2his.eastmoney.com/api/qt/stock/kline/get?secid=${opt.code}&fields1=f1,f2,f3,f4,f5&fields2=f51,f52,f53,f54,f55,f56,f57&klt=101&fqt=0&beg=${start.replace(/-/g, '')}&end=${end.replace(/-/g, '')}&ut=fa5fd1943c7b386f172d6893dbfba10b`, (res) => {
+      console.log(`指数基金 响应`, res.data.klines)
+      const list = res.data.klines
+      const indexFundData = list.reduce((result, cur: string) => {
+        const [date, , val] = cur.split(',')
         result[date] = {
           date,
           val
         }
-        return result 
+        return result
       }, {})
-      
-      
+
+
       let mergedData = {
         ...savedData,
         ...indexFundData
       }
-      const sortedDates = Object.keys(mergedData).sort((a, b)=> new Date(b).getTime() -  new Date(a).getTime())
-      mergedData = sortedDates.reduce((result, cur)=>{
+      const sortedDates = Object.keys(mergedData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+      
+      mergedData = sortedDates.reduce((result, cur) => {
         result[cur] = mergedData[cur]
         return result
       }, {})
+      console.log('sorted date', mergedData)
 
       calcMACD(mergedData)
-      
+
 
       // console.log('shangZhengData with eacd', Object.values(mergedData).slice(0, 10), mergedData) 
 
-      
+
 
       localStorage.setItem(opt.code, JSON.stringify(mergedData))
 
       resolve(mergedData)
     })
   })
-  
+
 
 }
 
@@ -255,26 +265,26 @@ export interface SearchIndexResp {
 /**
  * 指数动态查询
  */
-export const searchIndex = async (input: string): Promise<SearchIndexResp[]>=>{
-// http://searchapi.eastmoney.com/api/suggest/get?cb=jQuery112408632397893769632_1580928562563&input=%E4%B8%AD%E8%AF%81%E7%99%BD%E9%85%92&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=1580928562702
-return new Promise((resolve)=>{
-  const path = `//searchapi.eastmoney.com/api/suggest/get?input=${input}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=${Date.now()}`
+export const searchIndex = async (input: string): Promise<SearchIndexResp[]> => {
+  // http://searchapi.eastmoney.com/api/suggest/get?cb=jQuery112408632397893769632_1580928562563&input=%E4%B8%AD%E8%AF%81%E7%99%BD%E9%85%92&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=1580928562702
+  return new Promise((resolve) => {
+    const path = `//searchapi.eastmoney.com/api/suggest/get?input=${input}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&markettype=&mktnum=&jys=&classify=&securitytype=&count=5&_=${Date.now()}`
 
-  getJSONP(path, (resp) => {
-    let data = resp.QuotationCodeTable.Data || []
-    data = data.filter(item => item.Classify === 'Index')
+    getJSONP(path, (resp) => {
+      let data = resp.QuotationCodeTable.Data || []
+      data = data.filter(item => item.Classify === 'Index')
 
-    const result = data.map(item => {
-      return {
-        code: item.Code,
-        name: item.Name,
-        id: item.QuoteID
-      }
+      const result = data.map(item => {
+        return {
+          code: item.Code,
+          name: item.Name,
+          id: item.QuoteID
+        }
+      })
+
+      resolve(result)
     })
-
-    resolve(result)
   })
-})
 }
 
 export interface FundInfo {
@@ -284,8 +294,8 @@ export interface FundInfo {
 /**
  * 基金动态查询
  */
-export const getFundInfo = async (key):Promise<FundInfo[]>=>{
-  return new Promise((resolve)=>{
+export const getFundInfo = async (key): Promise<FundInfo[]> => {
+  return new Promise((resolve) => {
     const path = `https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m=10&t=700&IsNeedBaseInfo=0&IsNeedZTInfo=0&key=${key}&_=${Date.now()}`
 
     getJSONP(path, (resp) => {

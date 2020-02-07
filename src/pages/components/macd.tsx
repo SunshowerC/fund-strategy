@@ -69,10 +69,11 @@ export default class MacdLine extends Component<MacdLineProp> {
       dea: commonLineScale,
     }
     const ds = this.ds
-    const oneYearAgoDate = dateFormat(new Date(data[0].date).getTime() - ONE_YEAR)
+    const oneYearAgoDate = dateFormat(new Date(data[data.length - 1].date).getTime() - ONE_YEAR)
+    // 默认展示最近一年的指数数据
     this.sliderTimeChange({
-      startText: data[data.length - 1].date > oneYearAgoDate ? data[data.length - 1].date : oneYearAgoDate,
-      endText: data[0].date
+      startText: data[0].date > oneYearAgoDate ? data[0].date : oneYearAgoDate,
+      endText: data[data.length - 1].date
     })
 
     // 数据格式化
