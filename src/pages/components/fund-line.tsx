@@ -52,7 +52,9 @@ export const keyTextMap = {
   accumulatedProfit: '累计盈亏',
   maxPrincipal: '累计本金',
   totalProfitRate: '累计收益率',
-  position: '持有仓位'
+  position: '持有仓位',
+  buy: '买入',
+  sell: '卖出'
 }
 
 
@@ -71,6 +73,14 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
   render() {
     
     const investmentData = this.props.data.map(item => {
+      let txnType 
+      if (item.dateBuyAmount > 0) {
+        txnType = 'buy'
+      } 
+      if(item.dateSellAmount > 0){
+        txnType = 'sell'
+      }
+      
       return {
         // ...item,
         // fundVal: Number(item.curFund.val),
@@ -85,6 +95,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         fundGrowthRate: item.fundGrowthRate,
         dateBuyAmount: item.dateBuyAmount,
         dateSellAmount: item.dateSellAmount,
+        txnType,
         accumulatedProfit: item.accumulatedProfit,
         maxPrincipal: item.maxPrincipal,
         totalProfitRate: item.totalProfitRate,

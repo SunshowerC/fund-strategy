@@ -80,6 +80,11 @@ export class FundValChart extends Component<AmountProp> {
         fundGrowth: 0,
         totalProfit: 0
     }
+    const pointColorMap = {
+      // 'none': '#fff',
+      'buy': COLOR_NAME.red,
+      'sell': COLOR_NAME.green
+    }
     return <div >
       <h1 className="main-title" >
         基金业绩走势
@@ -91,21 +96,17 @@ export class FundValChart extends Component<AmountProp> {
       </h2>
       
       <Chart data={data} scale={scale}  {...commonChartProp} >
+        
         <Legend
-          itemFormatter={(()=>{
-            let fundGrowthRateCount = 0
-            return val => {
-              if(val === 'fundGrowthRate' ) {
-                fundGrowthRateCount++
-              }
-
-              if(val === 'fundGrowthRate' && fundGrowthRateCount === 2) {
-                return '交易点'
-              }
+          name="txnType"
+          itemFormatter={val => {
+              console.log('itemformate', val)
+              
               return textMap[val]
             }
-          })()}
+          }
         />
+
         <Axis name={x} />
         <Axis name="fundGrowthRate" />
         <Axis name="profitRate" visible={false} />
@@ -145,6 +146,9 @@ export class FundValChart extends Component<AmountProp> {
           position={`${x}*${y}`}
           size={4}
           shape={"circle"}
+          color={["txnType", (type)=>{
+            return pointColorMap[type]
+          }]}
           opacity={['dateBuyAmount*dateSellAmount', (...arg) => {
             const dateBuyAmount = arg[0],
             dateSellAmount = (arg as any)[1]
@@ -155,19 +159,10 @@ export class FundValChart extends Component<AmountProp> {
             return 1
           }]}
           tooltip={this.getTooltipFormat(y + '*dateBuyAmount')}
-          style={[`dateBuyAmount*dateSellAmount`, {
+          style={{
             lineWidth: 2,
-            fill(dateBuyAmount: number, dateSellAmount: number) {
-              if(dateSellAmount > 0){
-                return COLOR_NAME.green
-              } else if (dateBuyAmount > 0) {
-                return COLOR_PLATE_8[7]
-              } else {
-                return "#fff"
-              }
-            },
             stroke: "#fff"
-          }]}
+          }}
         />
       </Chart>
     </div>

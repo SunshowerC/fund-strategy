@@ -15,6 +15,7 @@ import { roundToFix } from '@/utils/common'
 export type ChartSnapshot = Pick<InvestDateSnapshot,'totalAmount'|'leftAmount'|'date'|'profit'|'profitRate'|'fundAmount'|'fundGrowthRate'|'dateBuyAmount'|'dateSellAmount'|'accumulatedProfit'|'maxPrincipal'|'totalProfitRate'> & {
   fundVal: number,
   position?: number, // 仓位
+  txnType?: 'buy' | 'sell' | 'none' // 当日交易类型
   origin: InvestDateSnapshot
 } 
 
