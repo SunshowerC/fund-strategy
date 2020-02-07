@@ -80,7 +80,7 @@ export interface FundFormObj {
   /**
    * 参考指数
    */
-  referIndex: Record<string, IndexData>
+  referIndex: string
 }
 
 export interface FundSearchProp extends FormComponentProps<FundFormObj> {

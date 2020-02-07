@@ -3,7 +3,7 @@ import styles from './index.css';
 import { FundChart } from './components/fund-line'
 import { SearchForm, FundFormObj } from './components/search-form'
 import 'antd/dist/antd.css'
-import { getFundData, FundJson, getIndexFundData, IndexFund, calcMACD } from '@/utils/fund-stragegy/fetch-fund-data';
+import { getFundData, FundJson, getIndexFundData, IndexFund, calcMACD, IndexData } from '@/utils/fund-stragegy/fetch-fund-data';
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy';
 import { notification } from 'antd';
 import moment from 'moment'
@@ -11,7 +11,7 @@ import moment from 'moment'
 // import shangZhengData from '../utils/fund-stragegy/static/shanghai.json'
 import { dateFormat, roundToFix } from '@/utils/common';
 
-let shangZhengData
+
 
 export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}> {
   
@@ -26,15 +26,18 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
   getFundData = async (formData: FundFormObj) => {
     console.log('基金表单参数', formData)
 
-    const [result, szData] = await Promise.all([
+    const [result, szData, referIndexData] = await Promise.all([
       getFundData(formData.fundId, formData.dateRange),
       getIndexFundData({
         code: IndexFund.ShangZheng,
         range: formData.dateRange
-      })
+      }),
+      formData.referIndex ? getIndexFundData({
+        code: formData.referIndex,
+        range: formData.dateRange
+      }) : Promise.resolve(null)
     ]) 
 
-    shangZhengData = szData
     
 
 
@@ -44,7 +47,10 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
       formData.dateRange[0] = moment(startDate)
     }
     try {
-      return this.createInvestStragegy(result, formData)
+      return this.createInvestStragegy(result, formData, {
+        szData,
+        indexData: referIndexData 
+      })
     } catch(e) {
       notification.error({
         message: '基金创建错误',
@@ -59,12 +65,15 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
    * @param fundData 基金源数据
    * @param formData 基金表单自定义选项
    */
-  createInvestStragegy(fundData: FundJson, formData: FundFormObj) {
+  createInvestStragegy(fundData: FundJson, formData: FundFormObj, opt: {
+    szData: Record<string, IndexData>,
+    indexData: Record<string, IndexData>
+  }) {
     const investment = new InvestmentStrategy({
       totalAmount: formData.totalAmount + formData.purchasedFundAmount,
       salary: formData.salary,
-      shangZhengData,
-      indexData: shangZhengData,
+      shangZhengData: opt.szData,
+      indexData: opt.indexData || opt.szData,
       
       // buyFeeRate: 0.0015,
       // sellFeeRate: 0.005,
@@ -83,7 +92,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         const latestInvestment = this.latestInvestment
         // console.log('this day', dateFormat(curDate), this.annualizedRate.totalProfit)
         const curSzIndex = this.getFundByDate(dateStr, {
-          origin: shangZhengData
+          origin: opt.szData
         })
 
         
