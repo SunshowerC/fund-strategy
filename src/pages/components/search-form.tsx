@@ -6,6 +6,7 @@ import { dateFormat } from '@/utils/common';
 import { FundInfo, getFundInfo, IndexData } from '@/utils/fund-stragegy/fetch-fund-data';
 import styles from '../index.css';
 import { StopProfitForm } from './stop-profit-form';
+import { BuyStragegyForm } from './buy-stragegy-form'
 import { SavedSearchCondition } from './saved-search'
 import { throttle } from 'lodash'
 
@@ -81,6 +82,16 @@ export interface FundFormObj {
    * 参考指数
    */
   referIndex: string
+
+  /**
+   * 补仓macd（参考指数） 百分位临界点
+   */
+  buyMacdPoint: number 
+
+  /**
+   * 卖出 macd （参考指数）百分位临界点
+   */
+  sellMacdPoint: number 
 }
 
 export interface FundSearchProp extends FormComponentProps<FundFormObj> {
@@ -201,7 +212,7 @@ export class InnerSearchForm extends Component<FundSearchProp, {
 
     const colProp = {
       span: 24,
-      lg: 12,
+      xl: 12,
       xxl: 8
     }
 
@@ -319,6 +330,9 @@ export class InnerSearchForm extends Component<FundSearchProp, {
 
           <Col {...colProp}>
           <StopProfitForm form={this.props.form} />
+          </Col>
+          <Col {...colProp}>
+            <BuyStragegyForm form={this.props.form} />
           </Col>
         </Row>
       </Form>

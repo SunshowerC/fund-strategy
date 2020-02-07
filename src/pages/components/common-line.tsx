@@ -59,7 +59,10 @@ export class CommonFundLine extends Component<CommonFundLineProp> {
         {subTitle}
       </h2>: ''}
 
-      <Chart  data={data}  {...commonChartProp} >
+      <Chart  data={data}  {...commonChartProp} scale={{
+      date: {
+        type: 'timeCat'
+      }}} >
         <Legend
           {...(legendProp as any || {})}
         />

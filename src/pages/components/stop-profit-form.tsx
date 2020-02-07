@@ -89,6 +89,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
             )}
           </Col>
           <Col span={12}>
+            <Form.Item style={{marginBottom: 'unset'}}>
             {getFieldDecorator<FundFormObj>('sellUnit', {
               initialValue: 'fundPercent',
             })(
@@ -97,6 +98,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
                 <Option value="fundPercent">% 持有份额</Option>
               </Select>
             )}
+            </Form.Item>
           </Col>
         </Row>
       </Form.Item>
