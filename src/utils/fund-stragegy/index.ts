@@ -84,6 +84,11 @@ export class InvestmentStrategy {
   dataMap: Record<string, InvestDateSnapshot> = {}
 
   /**
+   * 定投配置
+   */
+  fixedConfig!: FixedInvestOption
+
+  /**
    * 年化收益率
    * - 基金折合年化收益率
    * - 累计年化收益率
@@ -137,7 +142,7 @@ export class InvestmentStrategy {
    */
   fixedInvest(opt: FixedInvestOption) {
     const {range, fixedInvestment} = opt
-    
+    this.fixedConfig = opt
     
     // 定投策略
     const beginTime = new Date(range[0]).getTime()
@@ -644,9 +649,6 @@ export class InvestDateSnapshot {
     }
     // amount 是掏出的钱
     // buyTxn.amount 是除去 手续费后，确切买入基金的金额， 两者差价为买入手续费
-    // if(amount > 0) {
-    //   debugger
-    // }
     if(amount <= 0) {
       return this
     }

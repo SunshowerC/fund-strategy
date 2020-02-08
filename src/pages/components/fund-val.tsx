@@ -82,7 +82,8 @@ export class FundValChart extends Component<AmountProp> {
     }
     const pointColorMap = {
       // 'none': '#fff',
-      'buy': COLOR_NAME.red,
+      'fixedBuy': COLOR_NAME.red,
+      'buy': COLOR_NAME.purple,
       'sell': COLOR_NAME.green
     }
     return <div >

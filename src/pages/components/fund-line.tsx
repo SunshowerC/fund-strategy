@@ -54,6 +54,7 @@ export const keyTextMap = {
   totalProfitRate: '累计收益率',
   position: '持有仓位',
   buy: '买入',
+  fixedBuy: '定投',
   sell: '卖出'
 }
 
@@ -71,11 +72,14 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
   }
 
   render() {
-    
+    // 定投金额
+    const fixedInvestAmount = this.props.data[0].fundStrategy.fixedConfig.fixedInvestment.amount
+
     const investmentData = this.props.data.map(item => {
       let txnType 
-      if (item.dateBuyAmount > 0) {
-        txnType = 'buy'
+      
+      if (item.dateBuyAmount > 0 ) {
+        txnType = item.dateBuyAmount === fixedInvestAmount ? 'fixedBuy' : 'buy'
       } 
       if(item.dateSellAmount > 0){
         txnType = 'sell'

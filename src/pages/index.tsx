@@ -3,7 +3,7 @@ import styles from './index.css';
 import { FundChart } from './components/fund-line'
 import { SearchForm, FundFormObj } from './components/search-form'
 import 'antd/dist/antd.css'
-import { getFundData, FundJson, getIndexFundData, IndexFund, calcMACD, IndexData } from '@/utils/fund-stragegy/fetch-fund-data';
+import { getFundData, FundJson, getIndexFundData, IndexFund, calcMACD, IndexData, txnByMacd } from '@/utils/fund-stragegy/fetch-fund-data';
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy';
 import { notification } from 'antd';
 import moment from 'moment'
@@ -38,7 +38,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
       }) : Promise.resolve(null)
     ]) 
 
-    
+    txnByMacd(Object.values(referIndexData), formData.sellMacdPoint/100)
 
 
     // console.log('result', result)
@@ -69,11 +69,13 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
     szData: Record<string, IndexData>,
     indexData: Record<string, IndexData>
   }) {
+
+
     const investment = new InvestmentStrategy({
       totalAmount: formData.totalAmount + formData.purchasedFundAmount,
       salary: formData.salary,
       shangZhengData: opt.szData,
-      indexData: opt.indexData || opt.szData,
+      indexData: opt.indexData,
       
       // buyFeeRate: 0.0015,
       // sellFeeRate: 0.005,
@@ -91,17 +93,24 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         const dateStr  = dateFormat(curDate)
         const latestInvestment = this.latestInvestment
         // console.log('this day', dateFormat(curDate), this.annualizedRate.totalProfit)
+        // 当日上证指数数据
         const curSzIndex = this.getFundByDate(dateStr, {
           origin: opt.szData
         })
 
-        
+        // 仓位
         const level =  roundToFix(latestInvestment.fundAmount / latestInvestment.totalAmount, 2)
         
+        const curReferIndex = (opt.indexData[dateStr] || {}) as any as IndexData
+
+        
+        // PS: 此处是否收益新高，与是否 macd 卖出点 两个条件不能共存，
+        // 因为一般来说，macdPosition === 1 即是收益新高
         if(
           level > formData.fundPosition/100 // 仓位大于
           && curSzIndex.val > formData.shCompositeIndex // 上证指数大于 3000
           && (!formData.sellAtTop || latestInvestment.maxAccumulatedProfit.date === latestInvestment.date)  // 是否是新高收益
+          && (!formData.sellMacdPoint || curReferIndex.txnType === 'sell') // 是否是 macd 卖出点
         ) {
           console.log('止盈点', dateStr)
           // 止盈点减仓 10%持有 / 定值

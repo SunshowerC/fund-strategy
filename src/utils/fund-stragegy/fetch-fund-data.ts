@@ -116,7 +116,9 @@ export interface IndexData {
   macd: number
 
   macdPosition: number // 当前 macd 百分位
-  index?: number
+  index?: number // 下标
+  
+  txnType?: 'buy'|'sell'
 }
 
 const EMA = (close: number, days: number, opt: {
@@ -217,6 +219,10 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
  * @param position 交易 macd 位置
  */
 export const txnByMacd = (indexData: IndexData[], position: number) =>{
+  // 如果没有临界点，即无需参考 macd 临界点
+  if(!position) {
+    return 
+  }
   indexData[0].index = 0 
 
   let indexDataGroups: IndexData[][] = [[indexData[0]]]
@@ -236,8 +242,8 @@ export const txnByMacd = (indexData: IndexData[], position: number) =>{
     return curItem
   })
 
-  const buyDateList: IndexData[] = []
-  const sellDateList: IndexData[] = []
+  const buy: Record<string, IndexData> = {}
+  const sell: Record<string, IndexData> = {}
   
   // 对分组后的 indexData 迭代
   indexDataGroups.forEach(curIndexList => {
@@ -254,16 +260,19 @@ export const txnByMacd = (indexData: IndexData[], position: number) =>{
     // 默认 greaterIndexList 是连续的，TODO: 有多个峰存在的情况
     if(maxMacdIndexObj.macd > 0) {
       // 上涨行情， macdPosition 大于 xxx 的倒数第一个值，该值就是卖出点
-      sellDateList.push(indexData[buySellIndex])
+      indexData[buySellIndex].txnType = 'sell'
+      sell[indexData[buySellIndex].date] = indexData[buySellIndex]
+
     } else {
       // 同理，在下跌行情中，macdPosition 大于 50% 的倒数第一个值，该值就是买入点
-      buyDateList.push(indexData[buySellIndex])
+      indexData[buySellIndex].txnType = 'buy'
+      buy[indexData[buySellIndex].date] = indexData[buySellIndex]
     }
   })
 
   return {
-    buyDateList,
-    sellDateList
+    buy,
+    sell
   }
   
 }
@@ -328,7 +337,7 @@ export const getIndexFundData = async (opt: {
       }, {})
 
 
-      let mergedData = {
+      let mergedData:Record<string, IndexData> = {
         ...savedData,
         ...indexFundData
       }
@@ -349,7 +358,13 @@ export const getIndexFundData = async (opt: {
 
       localStorage.setItem(opt.code, JSON.stringify(mergedData))
 
-      resolve(mergedData)
+      const rangedData = {}
+      for(let date in mergedData) {
+        if(date >= dateFormat(opt.range[0]) && date <= dateFormat(opt.range[1])) {
+          rangedData[date] = mergedData[date]
+        }
+      }
+      resolve(rangedData)
     })
   })
 
