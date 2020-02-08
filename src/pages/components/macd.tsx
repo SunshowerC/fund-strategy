@@ -52,7 +52,7 @@ export default class MacdLine extends Component<MacdLineProp> {
     textMap = {...textMap, val: '指数' }
     const macdChartProp = {
       ...commonProp.chart,
-      height: 300
+      height: 500
     }
     const { result: data, min, max } = this.getDataList()
     console.log('macd line', data)
@@ -67,6 +67,9 @@ export default class MacdLine extends Component<MacdLineProp> {
       macd: commonLineScale,
       diff: commonLineScale,
       dea: commonLineScale,
+      val: {
+        alias: '指数值'
+      }
     }
     const ds = this.ds
     const oneYearAgoDate = dateFormat(new Date(data[data.length - 1].date).getTime() - ONE_YEAR)
@@ -89,29 +92,37 @@ export default class MacdLine extends Component<MacdLineProp> {
       })
     
     return <div >
-      {/* <h1 className="main-title" >
-        {title} MACD 趋势图
-      </h1> */}
+      <h1 className="main-title" >
+        参考指数曲线与 MACD 趋势图
+      </h1>
        
-      <CommonFundLine 
+      {/* <CommonFundLine 
           y='val'
-          data={dv as any} textMap={textMap} commonProp={commonProp} />
+          data={dv as any} textMap={textMap} commonProp={commonProp} /> */}
 
       <Chart data={dv} scale={scale}  {...macdChartProp} >
-        {/* <Legend /> */}
+        {/* <Legend name="val" /> */}
         <Axis name='date' />
         <Axis name='macd' />
         <Axis name="diff" visible={false} />
         <Axis name="dea" visible={false} />
 
         <Tooltip />
+        <Geom
+          type="line"
+          position={'date*val'}
+          color={COLOR_NAME.purple}
+          size={2}
+          // tooltip={this.getTooltipFormat(`${y}*name`)}
+        />
+
         <Geom type='interval'
           color={['macd', (macd) => {
             return macd > 0 ? COLOR_NAME.red : COLOR_NAME.green
           }]}
           position='date*macd' />
-        <Geom type='line' position='date*diff' color={COLOR_NAME.yellow} />
-        <Geom type='line' position='date*dea' color={COLOR_NAME.blue} />
+        {/* <Geom type='line' position='date*diff' color={COLOR_NAME.yellow} />
+        <Geom type='line' position='date*dea' color={COLOR_NAME.blue} /> */}
       </Chart>
 
       <div>

@@ -100,8 +100,6 @@ export class FundValChart extends Component<AmountProp> {
         <Legend
           name="txnType"
           itemFormatter={val => {
-              console.log('itemformate', val)
-              
               return textMap[val]
             }
           }

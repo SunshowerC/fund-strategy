@@ -116,6 +116,7 @@ export interface IndexData {
   macd: number
 
   macdPosition: number // 当前 macd 百分位
+  index?: number
 }
 
 const EMA = (close: number, days: number, opt: {
@@ -208,6 +209,63 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
   calcMacdPosition(indexList)
 
   return indexDataMap
+}
+
+/**
+ * 根据 macd 计算出交易点
+ * @param indexData 指数数据
+ * @param position 交易 macd 位置
+ */
+export const txnByMacd = (indexData: IndexData[], position: number) =>{
+  indexData[0].index = 0 
+
+  let indexDataGroups: IndexData[][] = [[indexData[0]]]
+  indexData.reduce((previousItem, curItem, curIndex)=>{
+    curItem.index = curIndex
+    const isSameSide = previousItem.macd * curItem.macd
+     
+    if(isSameSide < 0) {
+      // 不同边的 macd 时，创建一个新的 group
+      indexDataGroups.push([curItem])
+    } else {
+      // 同一边的 macd
+       
+      indexDataGroups[indexDataGroups.length - 1].push(curItem) 
+    }
+    
+    return curItem
+  })
+
+  const buyDateList: IndexData[] = []
+  const sellDateList: IndexData[] = []
+  
+  // 对分组后的 indexData 迭代
+  indexDataGroups.forEach(curIndexList => {
+    const maxMacdIndexObj = curIndexList.find(indexObj => indexObj.macdPosition === 1)!
+    const greaterIndexList = curIndexList.filter(item => item.macdPosition >= position)
+    
+    const buySellIndex = greaterIndexList[greaterIndexList.length - 1].index! + 1
+
+    // 如果不存在
+    if(!indexData[buySellIndex]) {
+      return 
+    }
+
+    // 默认 greaterIndexList 是连续的，TODO: 有多个峰存在的情况
+    if(maxMacdIndexObj.macd > 0) {
+      // 上涨行情， macdPosition 大于 xxx 的倒数第一个值，该值就是卖出点
+      sellDateList.push(indexData[buySellIndex])
+    } else {
+      // 同理，在下跌行情中，macdPosition 大于 50% 的倒数第一个值，该值就是买入点
+      buyDateList.push(indexData[buySellIndex])
+    }
+  })
+
+  return {
+    buyDateList,
+    sellDateList
+  }
+  
 }
 
 
