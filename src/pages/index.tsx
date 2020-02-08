@@ -38,7 +38,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
       }) : Promise.resolve(null)
     ]) 
 
-    txnByMacd(Object.values(referIndexData), formData.sellMacdPoint/100)
+    txnByMacd(Object.values(referIndexData), formData.sellMacdPoint/100, formData.buyMacdPoint / 100)
 
 
     // console.log('result', result)
@@ -89,6 +89,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         amount: 1000
       },
       fundJson: fundData,
+      // 每日自定义交易操作
       onEachDay(this: InvestmentStrategy, curDate: number){
         const dateStr  = dateFormat(curDate)
         const latestInvestment = this.latestInvestment
@@ -116,6 +117,16 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
           // 止盈点减仓 10%持有 / 定值
           const sellAmount = formData.sellUnit === 'amount' ? formData.sellNum : (formData.sellNum / 100 * latestInvestment.fundAmount ).toFixed(2)
           this.sell(Number(sellAmount), dateStr)
+        }
+
+        
+
+        if(
+          (formData.buyMacdPoint && curReferIndex.txnType === 'buy') // 是否是 macd 买入点
+        ) {
+          const buyAmount = Math.round(latestInvestment.leftAmount * formData.buyAmountPercent / 100)
+          console.log('补仓点', dateStr, buyAmount)
+          this.buy(buyAmount, dateStr)
         }
 
          

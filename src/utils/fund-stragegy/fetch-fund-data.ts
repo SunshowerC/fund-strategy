@@ -218,11 +218,9 @@ export const calcMACD = (indexDataMap: Record<string, IndexData>) => {
  * @param indexData 指数数据
  * @param position 交易 macd 位置
  */
-export const txnByMacd = (indexData: IndexData[], position: number) =>{
-  // 如果没有临界点，即无需参考 macd 临界点
-  if(!position) {
-    return 
-  }
+export const txnByMacd = (indexData: IndexData[], sellPosition: number, buyPosition: number ) =>{
+  
+  
   indexData[0].index = 0 
 
   let indexDataGroups: IndexData[][] = [[indexData[0]]]
@@ -242,13 +240,27 @@ export const txnByMacd = (indexData: IndexData[], position: number) =>{
     return curItem
   })
 
-  const buy: Record<string, IndexData> = {}
-  const sell: Record<string, IndexData> = {}
+  // const buy: Record<string, IndexData> = {}
+  // const sell: Record<string, IndexData> = {}
   
   // 对分组后的 indexData 迭代
   indexDataGroups.forEach(curIndexList => {
     const maxMacdIndexObj = curIndexList.find(indexObj => indexObj.macdPosition === 1)!
-    const greaterIndexList = curIndexList.filter(item => item.macdPosition >= position)
+    const isPositiveMacd = maxMacdIndexObj.macd > 0
+    // 如果是 正的 macd，但是没有 卖出macd临界点
+    // 或者是 负的 macd，但是没有 买入macd临界点
+    // 那么就没有必要计算 macd 临界点
+    if((isPositiveMacd && !sellPosition) || (!isPositiveMacd && !buyPosition)) {
+      return 
+    }
+    // 当前曲线，大于临界点的所有 macd 点
+    const greaterIndexList = curIndexList.filter(item => {
+      if(isPositiveMacd) {
+        return item.macdPosition >= sellPosition
+      } else {
+        return item.macdPosition >= buyPosition
+      }
+    })
     
     const buySellIndex = greaterIndexList[greaterIndexList.length - 1].index! + 1
 
@@ -258,22 +270,22 @@ export const txnByMacd = (indexData: IndexData[], position: number) =>{
     }
 
     // 默认 greaterIndexList 是连续的，TODO: 有多个峰存在的情况
-    if(maxMacdIndexObj.macd > 0) {
+    if(isPositiveMacd) {
       // 上涨行情， macdPosition 大于 xxx 的倒数第一个值，该值就是卖出点
       indexData[buySellIndex].txnType = 'sell'
-      sell[indexData[buySellIndex].date] = indexData[buySellIndex]
+      // sell[indexData[buySellIndex].date] = indexData[buySellIndex]
 
     } else {
       // 同理，在下跌行情中，macdPosition 大于 50% 的倒数第一个值，该值就是买入点
       indexData[buySellIndex].txnType = 'buy'
-      buy[indexData[buySellIndex].date] = indexData[buySellIndex]
+      // buy[indexData[buySellIndex].date] = indexData[buySellIndex]
     }
   })
 
-  return {
-    buy,
-    sell
-  }
+  // return {
+  //   buy,
+  //   sell
+  // }
   
 }
 

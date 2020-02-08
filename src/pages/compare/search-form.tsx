@@ -16,7 +16,7 @@ curMonth = Number(curMonth) - 1
 /**
  * 没有必要进行对比的数据
  */
-const excludeList: (keyof typeof keyTextMap)[] = ['fundVal', 'dateBuyAmount', 'dateSellAmount']
+const excludeList: (keyof typeof keyTextMap)[] = ['fundVal', 'dateBuyAmount', 'dateSellAmount', 'buy','fixedBuy','sell']
 
 interface CompareFormProp extends FormComponentProps{
   onSearch: (val: CompareFormObj)=>void
@@ -88,6 +88,7 @@ export class CompareForm extends  Component<CompareFormProp> {
         <Form.Item {...formItemLayout} label="对比的数据" >
         {
           getFieldDecorator<CompareFormObj>('chartChecked', {
+            initialValue: ['totalAmount', 'accumulatedProfit', 'totalProfitRate', 'position'],
             rules: [{ required: true, message: '请至少选择一个数据' }],
           })(<Checkbox.Group style={{ width: '100%' }}>
             {Object.keys(keyTextMap).filter((item:any) => !excludeList.includes(item)).map((key,index) => <Checkbox key={index} value={key}>{keyTextMap[key]}</Checkbox>)}

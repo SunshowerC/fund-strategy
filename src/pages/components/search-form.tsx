@@ -97,7 +97,7 @@ export interface FundFormObj {
   /**
    * 补仓买入时的 百分比
    */
-  buyAmount: number 
+  buyAmountPercent: number 
 }
 
 export interface FundSearchProp extends FormComponentProps<FundFormObj> {
