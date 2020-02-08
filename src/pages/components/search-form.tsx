@@ -92,6 +92,12 @@ export interface FundFormObj {
    * 卖出 macd （参考指数）百分位临界点
    */
   sellMacdPoint: number 
+
+
+  /**
+   * 补仓买入时的 百分比
+   */
+  buyAmount: number 
 }
 
 export interface FundSearchProp extends FormComponentProps<FundFormObj> {

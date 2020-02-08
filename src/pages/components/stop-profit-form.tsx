@@ -123,6 +123,16 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
             </Select>
           )}
         </Form.Item>
+
+        <Form.Item {...formItemLayout} label="卖出 MACD 临界点">
+        {getFieldDecorator<FundFormObj>('sellMacdPoint', {
+          initialValue: 100
+        })(
+          <InputNumber style={{width: '100%'}} formatter={value => `${value}%`}
+          parser={value => (value || '').replace('%', '')}  min={0} max={100} placeholder="macd 止盈点" />
+        )
+        }
+        </Form.Item>
     </section>
   }
 }

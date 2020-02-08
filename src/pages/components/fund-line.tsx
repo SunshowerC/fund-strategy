@@ -127,9 +127,10 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
     
     return (
       <div >
-        <MacdLine data={indexData} textMap={keyTextMap} commonProp={this.commonProp} /> 
 
         <FundValChart data={data} textMap={keyTextMap} commonProp={this.commonProp}  />
+
+        <MacdLine data={indexData} textMap={keyTextMap} commonProp={this.commonProp} /> 
 
         <RateChart data={data} textMap={keyTextMap} commonProp={this.commonProp} />
 
