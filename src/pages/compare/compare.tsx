@@ -17,6 +17,7 @@ export type ChartSnapshot = Pick<InvestDateSnapshot,'totalAmount'|'leftAmount'|'
   position?: number, // 仓位
   txnType?: 'buy' | 'sell' | 'fixedBuy' // 当日交易类型
   origin: InvestDateSnapshot
+  name?: string // 曲线名
 } 
 
 

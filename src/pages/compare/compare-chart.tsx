@@ -4,7 +4,9 @@ import { CommonFundLine, CommonFundLineProp } from '../components/common-line'
 import { keyTextMap } from '../components/fund-line'
 import {ChartSnapshot} from './compare'
 import { InvestDateSnapshot } from '@/utils/fund-stragegy'
-import { formatPercentVal } from '@/utils/common'
+import { formatPercentVal, roundToFix } from '@/utils/common'
+import { ComparePosition, CompareChartDataItem } from './compare-position'
+
 const commonProp:AmountProp['commonProp'] = {
   chart: {
     forceFit: true,
@@ -42,6 +44,22 @@ export class CompareChart extends Component<CompareChartProp> {
     if(!data || data.length === 0) {
       return null
     }
+    const intervalChartData: CompareChartDataItem[] = data.map((stragegy)=>{
+      let maxPos = 0
+      let avgPos = stragegy.data.reduce((result, cur) => {
+        const curPos = cur.position!
+        maxPos = curPos > maxPos ? curPos : maxPos
+        return result + curPos
+      }, 0) / stragegy.data.length
+      const profitPerInvest = stragegy.data[stragegy.data.length - 1].accumulatedProfit / avgPos
+
+      return {
+        name: stragegy.name,
+        avgPos: roundToFix(avgPos * 100),
+        maxPos: roundToFix(maxPos * 100),
+        profitPerInvest: roundToFix(profitPerInvest),
+      }
+    })
     const allData = data.reduce<ChartSnapshot[]>((resule, item) => {
       return [
         ...resule,
@@ -50,6 +68,7 @@ export class CompareChart extends Component<CompareChartProp> {
     }, [])
     // const first = this.props.data[0].data
     const {chartList} = this.props
+    console.log('allData', allData)
 
     return <div>
       {
@@ -61,9 +80,13 @@ export class CompareChart extends Component<CompareChartProp> {
             commonProp,
             formatVal: percentProp.includes(chartProp) ? formatPercentVal : undefined
           }
-        return <CommonFundLine  key={index} {...prop} />
+        return <CommonFundLine  key={index} {...prop}  />
         })
       }
+      <ComparePosition  
+        commonProp={commonProp} 
+        textMap={keyTextMap} 
+        data={intervalChartData} />
     </div>
   }
 }

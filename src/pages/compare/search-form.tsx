@@ -18,6 +18,8 @@ curMonth = Number(curMonth) - 1
  */
 const excludeList: (keyof typeof keyTextMap)[] = ['fundVal', 'dateBuyAmount', 'dateSellAmount', 'buy','fixedBuy','sell']
 
+const checkList: (keyof typeof keyTextMap)[] = ['totalAmount','leftAmount', 'profitRate', 'profit', 'fundAmount', 'fundGrowthRate', 'accumulatedProfit', 'totalProfitRate', 'position'] 
+
 interface CompareFormProp extends FormComponentProps{
   onSearch: (val: CompareFormObj)=>void
 }
@@ -91,7 +93,7 @@ export class CompareForm extends  Component<CompareFormProp> {
             initialValue: ['totalAmount', 'accumulatedProfit', 'totalProfitRate', 'position'],
             rules: [{ required: true, message: '请至少选择一个数据' }],
           })(<Checkbox.Group style={{ width: '100%' }}>
-            {Object.keys(keyTextMap).filter((item:any) => !excludeList.includes(item)).map((key,index) => <Checkbox key={index} value={key}>{keyTextMap[key]}</Checkbox>)}
+            {checkList.map((key,index) => <Checkbox key={index} value={key}>{keyTextMap[key]}</Checkbox>)}
         </Checkbox.Group>)
         }
         </Form.Item>

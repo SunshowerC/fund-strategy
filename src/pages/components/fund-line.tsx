@@ -53,9 +53,13 @@ export const keyTextMap = {
   maxPrincipal: '累计本金',
   totalProfitRate: '累计收益率',
   position: '持有仓位',
+  
   buy: '买入',
   fixedBuy: '定投',
-  sell: '卖出'
+  sell: '卖出',
+  avgPos: '平均仓位',
+  maxPos: '最大仓位',
+  profitPerInvest: '收益仓位比',
 }
 
 
