@@ -66,7 +66,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
           <InputNumber style={{ width: '100%' }}
             formatter={value => `${value}%`}
             parser={value => value ? value.replace('%', '') : ''}
-            min={1} max={100} placeholder="持仓大于多少时开始止盈" />
+            min={0} max={100} placeholder="持仓大于多少时开始止盈" />
         )}
       </Form.Item>
 

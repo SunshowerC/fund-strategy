@@ -124,8 +124,9 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         if(
           (formData.buyMacdPoint && curReferIndex.txnType === 'buy') // 是否是 macd 买入点
         ) {
-          const buyAmount = Math.round(latestInvestment.leftAmount * formData.buyAmountPercent / 100)
-          console.log('补仓点', dateStr, buyAmount)
+          // 补仓金额, 如果 formData.buyAmountPercent 数字小于 100，数字代表 比例，否则代表 金额
+          const buyAmount = formData.buyAmountPercent <= 100 ? Math.round(latestInvestment.leftAmount * formData.buyAmountPercent / 100) : formData.buyAmountPercent
+          console.log('补仓点', dateStr, buyAmount) 
           this.buy(buyAmount, dateStr)
         }
 

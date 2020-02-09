@@ -51,7 +51,7 @@ export class CompareChart extends Component<CompareChartProp> {
         maxPos = curPos > maxPos ? curPos : maxPos
         return result + curPos
       }, 0) / stragegy.data.length
-      const profitPerInvest = stragegy.data[stragegy.data.length - 1].accumulatedProfit / avgPos
+      const profitPerInvest = stragegy.data[stragegy.data.length - 1].accumulatedProfit / avgPos / 100
 
       return {
         name: stragegy.name,

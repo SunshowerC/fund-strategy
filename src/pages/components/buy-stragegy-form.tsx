@@ -75,13 +75,15 @@ export class BuyStragegyForm extends Component<FormComponentProps<FundFormObj>> 
 
       <Form.Item {...formItemLayout} label='补仓金额'>
         <div  >
-          <span>  剩余流动资金的</span>
+          <span>  剩余流动资金的 </span>
           {getFieldDecorator<FundFormObj>('buyAmountPercent', {
             initialValue: 20,
           })(
-            <InputNumber size="small"  min={0} max={100} placeholder="补仓买入百分比" />
-          )}
-          % </div>
+            <InputNumber size="small"  min={0}  
+            formatter={value => Number(value) > 100 ? `${value}元` : `${value}%`}
+            parser={value => (value || '').replace(/%|元/, '')}
+            placeholder="补仓买入百分比" />
+          )} </div>
 
       </Form.Item>
     </section>
