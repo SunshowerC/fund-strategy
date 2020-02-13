@@ -18,7 +18,7 @@ curMonth = Number(curMonth) - 1
  */
 const excludeList: (keyof typeof keyTextMap)[] = ['fundVal', 'dateBuyAmount', 'dateSellAmount', 'buy','fixedBuy','sell']
 
-const checkList: (keyof typeof keyTextMap)[] = ['totalAmount','leftAmount', 'profitRate', 'profit', 'fundAmount', 'fundGrowthRate', 'accumulatedProfit', 'totalProfitRate', 'position'] 
+const checkList: (keyof typeof keyTextMap)[] = ['totalAmount','leftAmount', 'profitRate', 'profit', 'fundAmount', 'fundGrowthRate', 'maxPrincipal','accumulatedProfit', 'totalProfitRate', 'position'] 
 
 interface CompareFormProp extends FormComponentProps{
   onSearch: (val: CompareFormObj)=>void

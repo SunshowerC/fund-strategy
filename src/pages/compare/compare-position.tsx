@@ -11,6 +11,10 @@ export interface CompareChartDataItem {
   avgPos: number
   maxPos: number
   profitPerInvest: number
+  /**
+   * 累计收益/最高仓位
+   */
+  profitAmountPerPos: number
 }
 
 interface ComparePositionProp extends Omit<CommonFundLineProp, 'data'|'y'> {
@@ -72,7 +76,7 @@ export class ComparePosition extends Component<ComparePositionProp> {
     </Chart>
 
     <h1 className="main-title" >
-        收益仓位比
+        收益/平均仓位比
     </h1>
     <Chart data={data}  {...commonChartProp} forceFit scale={scale} >
          
@@ -81,6 +85,18 @@ export class ComparePosition extends Component<ComparePositionProp> {
         <Tooltip />
 
         <Geom type="interval"  position="name*profitPerInvest"   />
+    </Chart>
+
+    <h1 className="main-title" >
+        累计收益/最高仓位
+    </h1>
+    <Chart data={data}  {...commonChartProp} forceFit scale={scale} >
+         
+        <Axis name="name" />
+        <Axis name="profitAmountPerPos"  />
+        <Tooltip />
+
+        <Geom type="interval"  position="name*profitAmountPerPos"   />
     </Chart>
     </div>
   }

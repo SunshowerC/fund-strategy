@@ -92,12 +92,14 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
       // 每日自定义交易操作
       onEachDay(this: InvestmentStrategy, curDate: number){
         const dateStr  = dateFormat(curDate)
+        // 当前的基金快照
         const latestInvestment = this.latestInvestment
         // console.log('this day', dateFormat(curDate), this.annualizedRate.totalProfit)
         // 当日上证指数数据
         const curSzIndex = this.getFundByDate(dateStr, {
           origin: opt.szData
         })
+        
 
         // 仓位
         const level =  roundToFix(latestInvestment.fundAmount / latestInvestment.totalAmount, 2)
@@ -112,10 +114,12 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
           && curSzIndex.val > formData.shCompositeIndex // 上证指数大于 3000
           && (!formData.sellAtTop || latestInvestment.maxAccumulatedProfit.date === latestInvestment.date)  // 是否是新高收益
           && (!formData.sellMacdPoint || curReferIndex.txnType === 'sell') // 是否是 macd 卖出点
+          && latestInvestment.profitRate > (formData.profitRate/100 || -100) // 持有收益率
         ) {
-          console.log('止盈点', dateStr)
+          // console.log('止盈点', dateStr)
           // 止盈点减仓 10%持有 / 定值
           const sellAmount = formData.sellUnit === 'amount' ? formData.sellNum : (formData.sellNum / 100 * latestInvestment.fundAmount ).toFixed(2)
+          
           this.sell(Number(sellAmount), dateStr)
         }
 
@@ -126,8 +130,10 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
         ) {
           // 补仓金额, 如果 formData.buyAmountPercent 数字小于 100，数字代表 比例，否则代表 金额
           const buyAmount = formData.buyAmountPercent <= 100 ? Math.round(latestInvestment.leftAmount * formData.buyAmountPercent / 100) : formData.buyAmountPercent
-          console.log('补仓点', dateStr, buyAmount) 
+          // console.log('补仓点', dateStr, buyAmount) 
+          // TODO: 补仓策略 买入的基金，只有持有收益 > 5% 才能卖
           this.buy(buyAmount, dateStr)
+         
         }
 
          

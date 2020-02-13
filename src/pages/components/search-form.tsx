@@ -76,7 +76,7 @@ export interface FundFormObj {
   /**
    * 持有收益率大于 xx 时止盈
    */
-  // profitRate: number
+  profitRate: number
 
   /**
    * 参考指数

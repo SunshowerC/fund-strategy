@@ -70,6 +70,17 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
         )}
       </Form.Item>
 
+      <Form.Item {...formItemLayout} label='持有收益率大于'>
+        {getFieldDecorator<FundFormObj>('profitRate', {
+          initialValue: 5,
+        })(
+          <InputNumber style={{ width: '100%' }}
+            formatter={value => `${value}%`}
+            parser={value => value ? value.replace('%', '') : ''}
+            min={0} placeholder="开始止盈的持有收益率最小值" />
+        )}
+      </Form.Item>
+
       <Form.Item {...formItemLayout} label='是否收益新高'>
         {getFieldDecorator<FundFormObj>('sellAtTop', {
           initialValue: true,
