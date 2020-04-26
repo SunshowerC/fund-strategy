@@ -55,7 +55,7 @@ export default class CompareStragegyChart extends Component<{}, CompareStragegyC
           accumulatedProfit: item.accumulatedProfit,
           maxPrincipal: item.maxPrincipal,
           totalProfitRate: item.totalProfitRate,
-          position: roundToFix(item.fundAmount / item.totalAmount) 
+          position: roundToFix(item.fundAmount / item.totalAmount, 4) 
         } as ChartSnapshot
       })
       

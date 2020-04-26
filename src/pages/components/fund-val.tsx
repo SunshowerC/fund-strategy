@@ -86,6 +86,9 @@ export class FundValChart extends Component<AmountProp> {
       'buy': COLOR_NAME.purple,
       'sell': COLOR_NAME.green
     }
+
+    
+
     return <div >
       <h1 className="main-title" >
         基金业绩走势

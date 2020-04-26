@@ -107,7 +107,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         accumulatedProfit: item.accumulatedProfit,
         maxPrincipal: item.maxPrincipal,
         totalProfitRate: item.totalProfitRate,
-        position: roundToFix(item.fundAmount / item.totalAmount) 
+        position: roundToFix(item.fundAmount / item.totalAmount, 4) 
       }
     })
     let data = investmentData as any as ChartSnapshot[]
@@ -132,6 +132,12 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
       return itemDateTime >= new Date(start).getTime() && itemDateTime <= new Date(end).getTime()
     })
     
+    let maxPos = 0
+    const avgPos = roundToFix( data.reduce((result, cur) => {
+      const curPos = cur.position!
+      maxPos = curPos > maxPos ? curPos : maxPos
+      return result + curPos
+    }, 0) / data.length * 100, 2)
     
     return (
       <div >
@@ -156,6 +162,7 @@ export class FundChart extends Component<{data: InvestDateSnapshot[]}> {
         })} >
         <CommonFundLine 
           y='position'
+          subTitle={`平均仓位：${avgPos}%; 最大仓位：${maxPos*100}%`}
           data={data} textMap={keyTextMap} commonProp={this.commonProp} />
         </SliderChart>
 

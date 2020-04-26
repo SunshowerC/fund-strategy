@@ -117,7 +117,7 @@ export class StopProfitForm extends Component<FormComponentProps<FundFormObj>>{
       <Form.Item {...formItemLayout} label="指数编号/名称">
           {getFieldDecorator<FundFormObj>('referIndex', {
             // rules: [{ required: true, message: '请输入指数名称' }],
-            // initialValue: '260108'
+            initialValue: '1.000001'
           })(
             // <Input />
             <Select

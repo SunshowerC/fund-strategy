@@ -25,7 +25,8 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
    */
   getFundData = async (formData: FundFormObj) => {
     console.log('基金表单参数', formData)
-
+    formData.referIndex = formData.referIndex || IndexFund.ShangZheng
+    
     const [result, szData, referIndexData] = await Promise.all([
       getFundData(formData.fundId, formData.dateRange),
       getIndexFundData({

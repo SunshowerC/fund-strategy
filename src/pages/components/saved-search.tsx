@@ -29,10 +29,11 @@ const SAVED_FORM_KEY = 'saved-fund-form'
 let allSavedConditionStr = localStorage.getItem(SAVED_FORM_KEY) || '{}'
 export const allSavedCondition = JSON.parse(allSavedConditionStr) as StorageSearch
 
-export class SavedSearchCondition extends Component<SavedSearchProp> {
+export class SavedSearchCondition extends Component<SavedSearchProp, SavedSearchCondition["state"]> {
 
   state = {
     allSavedCondition,
+    selectedName: ''
   }
 
   private deleteCondition(e: Event, tagName: string) {
@@ -56,14 +57,17 @@ export class SavedSearchCondition extends Component<SavedSearchProp> {
   }
   
   private saveSearchForm = () => {
-    
+    const selectedName = this.state.selectedName
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        let conditionName = ''
+        let conditionName = selectedName
         Modal.confirm({
           title: '请给当前搜索条件命名',
-          content: <Input placeholder="如果与当前已有名称重复，将会覆盖原有搜索条件" onChange={(e => {conditionName = e.target.value})} />,
+          content: <Input defaultValue={selectedName} placeholder="如名称重复，将会覆盖原有搜索条件" onChange={(e => {conditionName = e.target.value})} />,
           onOk: ()=> {
+            this.setState({
+              selectedName: conditionName
+            })
             this.state.allSavedCondition[conditionName] = values
             this.saveStorage()
             this.props.onSave && this.props.onSave(values)
@@ -73,18 +77,33 @@ export class SavedSearchCondition extends Component<SavedSearchProp> {
     });    
 
   }
+
+  /**
+   * 处理 tag 选择
+   * @param name 选择的tag 名
+   * @param value 该 tag 名对应的 搜索条件
+   */
+  private handleSelectedTag(name: string, value:any) {
+    this.setState({
+      selectedName: name
+    })
+    this.props.onSelected(name, value)
+  }
+
   /**
    * 以保存的列表内容
    */
   private content() {
     
     const allSavedCondition: StorageSearch = this.state.allSavedCondition
-    return <div>
+    return <div style={{width: 500}}>
       {
         Object.keys(allSavedCondition).map((name,index) => {
-          return <Tag closable key={index} color={tagColors[index%tagColors.length]} 
+          return <Tag closable key={index} style={{
+            marginBottom: 10
+          }} color={tagColors[index%tagColors.length]} 
             onClose={(e)=>this.deleteCondition(e, name)}
-            onClick={()=>this.props.onSelected(name, allSavedCondition[name])}
+            onClick={()=>this.handleSelectedTag(name, allSavedCondition[name])}
           >{name}</Tag>
         })
       }
@@ -96,7 +115,7 @@ export class SavedSearchCondition extends Component<SavedSearchProp> {
     return <Fragment>
       <Button type="default" onClick={this.saveSearchForm} style={{marginRight: 10}}>保存</Button>
 
-      <Popover content={this.content()} title="已保存的基金策略" trigger="hover">
+      <Popover placement="bottomRight" content={this.content()} title="已保存的基金策略" trigger="hover">
         <Button type="primary">我的保存项</Button>
       </Popover>
     </Fragment>
