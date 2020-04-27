@@ -221,7 +221,8 @@ export class InnerSearchForm extends Component<FundSearchProp, {
       xl: 12,
       xxl: 8
     }
-
+    const formVal: FundFormObj = this.props.form.getFieldsValue() as any
+    console.log('formVa', formVal)
     return <Card title="基金选项"
       extra={<SavedSearchCondition form={this.props.form} onSelected={this.updateSearchForm} />}
       style={{
@@ -342,6 +343,17 @@ export class InnerSearchForm extends Component<FundSearchProp, {
           </Col>
         </Row>
       </Form>
+      
+      {
+        formVal.dateRange ? 
+        <div>
+          <p> 定投描述：从 {formVal.dateRange[0].format('YYYY-MM-DD')} ~ {formVal.dateRange[1].format('YYYY-MM-DD')} 时间内
+          投资基金[{formVal.fundId}]，初始持有基金 {formVal.purchasedFundAmount} 元，持有可用投资资金 {formVal.totalAmount} 元，每月增加投资资金 {formVal.salary}元【工资收入】；每 {formVal.period[0] === 'weekly' ? '周' : '月'} {formVal.period[1]} {formVal.period[0] === 'weekly' ? '' : '号'} 定投 {formVal.fixedAmount} 元。</p>
+      <p>止盈描述：当上证指数大于 {formVal.shCompositeIndex} 点，且持有仓位大于 {formVal.fundPosition}%，且当前持有收益率大于 {formVal.profitRate}%，{formVal.sellAtTop ? '且累计盈利新高，' : ''}{formVal.sellMacdPoint !== null && formVal.sellMacdPoint >= 0 ? `且参考指数${formVal.referIndex}的MACD红柱接近 ${formVal.sellMacdPoint}% 临界位置，` : ''}则卖出 {formVal.sellNum} {formVal.sellUnit === 'amount' ? '元': '% 的持有份额'} </p>
+      <p>补仓描述：{formVal.buyMacdPoint !== null && formVal.buyMacdPoint >= 0 ? `参考指数${formVal.referIndex}的MACD绿柱接近 ${formVal.buyMacdPoint}% 临界位置，买入剩余流动资金的 ${formVal.buyAmountPercent}%` : ''}</p>
+        </div> : null
+      }
+      
     </Card>
   }
 }
