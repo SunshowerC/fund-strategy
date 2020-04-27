@@ -18,7 +18,7 @@ import {
   ChartProps
 } from "bizcharts";
 import React from 'react';
-import { COLOR_PLATE_16, COLOR_PLATE_8 } from '@/utils/color';
+import { COLOR_PLATE_16, COLOR_PLATE_8, COLOR_NAME } from '@/utils/color';
 import { roundToFix } from '@/utils/common';
 
 export class FundValChart extends Component<AmountProp> {
@@ -50,45 +50,65 @@ export class FundValChart extends Component<AmountProp> {
     y: 'fundGrowthRate'
   }
 
+  /** 
+   * 获取曲线最大最小值
+   * */
+  get scale() {
+    const list = this.props.data.reduce((valList,cur)=>{
+      valList.push(cur.profitRate, cur.fundGrowthRate, cur.totalProfitRate) 
+      return valList
+    }, [] as number[])
+
+    const minMax = {
+      min: Math.min(...list),
+      max: Math.max(...list)
+    }
+    return {
+      profitRate: minMax,
+      fundGrowthRate: minMax,
+      totalProfitRate: minMax
+    }
+  }
+
   render() {
     const { data, textMap, commonProp } = this.props
     const commonChartProp = commonProp.chart
     const { x, y } = this.xy
-    const scale = {
-      profitRate: {
-        min: 0,
-        max: 1
-      },
-      fundGrowthRate: {
-        min: 0,
-        max: 1
-      },
-      totalProfitRate: {
-        min: 0,
-        max: 1
-      }
+    const scale = this.scale
+    const len = data.length
+    const annualizedRate = len > 0 ? data[0].origin!.fundStrategy.annualizedRate : {
+        fundGrowth: 0,
+        totalProfit: 0
     }
+    const pointColorMap = {
+      // 'none': '#fff',
+      'fixedBuy': COLOR_NAME.red,
+      'buy': COLOR_NAME.purple,
+      'sell': COLOR_NAME.green
+    }
+
+    
+
     return <div >
       <h1 className="main-title" >
         基金业绩走势
       </h1>
+
+      <h2 className="sub-title">
+        <span>基金收益率：{roundToFix(data[len-1].fundGrowthRate * 100, 2)}%，年化收益率：{roundToFix( annualizedRate.fundGrowth * 100,2)}%</span> <br />
+        <span>定投累计收益率：{roundToFix(data[len-1].totalProfitRate * 100, 2)}%，年化收益率：{roundToFix( annualizedRate.totalProfit * 100, 2)}%</span> 
+      </h2>
       
       <Chart data={data} scale={scale}  {...commonChartProp} >
+        
         <Legend
-          itemFormatter={(()=>{
-            let fundGrowthRateCount = 0
-            return val => {
-              if(val === 'fundGrowthRate' ) {
-                fundGrowthRateCount++
-              }
-
-              if(val === 'fundGrowthRate' && fundGrowthRateCount === 2) {
-                return '交易点'
-              }
+          name="txnType"
+          itemFormatter={val => {
               return textMap[val]
             }
-          })()}
+          }
         />
+
         <Axis name={x} />
         <Axis name="fundGrowthRate" />
         <Axis name="profitRate" visible={false} />
@@ -128,6 +148,9 @@ export class FundValChart extends Component<AmountProp> {
           position={`${x}*${y}`}
           size={4}
           shape={"circle"}
+          color={["txnType", (type)=>{
+            return pointColorMap[type]
+          }]}
           opacity={['dateBuyAmount*dateSellAmount', (...arg) => {
             const dateBuyAmount = arg[0],
             dateSellAmount = (arg as any)[1]
@@ -138,19 +161,10 @@ export class FundValChart extends Component<AmountProp> {
             return 1
           }]}
           tooltip={this.getTooltipFormat(y + '*dateBuyAmount')}
-          style={[`dateBuyAmount*dateSellAmount`, {
+          style={{
             lineWidth: 2,
-            fill(dateBuyAmount: number, dateSellAmount: number) {
-              if(dateSellAmount > 0){
-                return COLOR_PLATE_8[2]
-              } else if (dateBuyAmount > 0) {
-                return COLOR_PLATE_8[7]
-              } else {
-                return "#fff"
-              }
-            },
             stroke: "#fff"
-          }]}
+          }}
         />
       </Chart>
     </div>

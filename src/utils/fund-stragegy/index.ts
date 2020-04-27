@@ -3,8 +3,9 @@
  * 投资快照类 描述了投资过程中，某一天的状态
  **************************/
 
-import { FundJson, FundDataItem } from "../../../tools/get-fund-data-json"
+import { FundJson } from "../../../tools/get-fund-data-json"
 import { dateFormat, roundToFix } from "../common"
+import { FundDataItem, IndexData } from './fetch-fund-data'
 // import FundDataJson from './static/景顺长城新兴成长混合260108.json'
 const ONE_DAY = 24 * 60 * 60 * 1000
 
@@ -23,24 +24,39 @@ interface FundTransaction {
   amount: number
 }
 
-/**
- * 基金的长期投资计划
- */
-export class InvestmentStrategy {
-  totalAmount!: number // 初始资本，存量
-  salary!: number // 工资，每月增量资金
-  
-  fixedInvestment!: {
+export interface FixedInvestOption {
+  fixedInvestment: {
     amount: number // 每次定投金额
     dateOrWeek: number // 每周周几，每月几号定投
     period: 'weekly' | 'monthly'   // 每周，每月，每 2 周定投
-  } // 定投周期
+  }, 
+  range: [string| Date, string| Date]
+}
 
+export class InvestmentStrategy {
+  totalAmount!: number // 初始资本，存量
+  salary!: number // 工资，每月增量资金
+
+  /**
+   * 定投时，每一天的回调函数
+   */
+  onEachDay!: Function
+
+  
   /**
    * 当前投资的状态
    */
   latestInvestment!: InvestDateSnapshot
 
+  /**
+   * (上证)指数数据
+   */
+  shangZhengData!: Record<string, IndexData> 
+
+  /**
+   * 跟踪指数指标
+   */
+  indexData?: Record<string, IndexData> 
   fundJson!: FundJson // 基金源数据
   
   buyFeeRate: number = 0.0015 // 买入的手续费， 一般是 0.15%
@@ -62,53 +78,125 @@ export class InvestmentStrategy {
    * 该基金策略下运行的每个交易日的数据
    */
   data: InvestDateSnapshot[] = []
+  /**
+   * 标识日期-数据
+   */
+  dataMap: Record<string, InvestDateSnapshot> = {}
 
-  // range!: [string| Date, string| Date]
+  /**
+   * 定投配置
+   */
+  fixedConfig!: FixedInvestOption
 
-  constructor(options: Pick<InvestmentStrategy, 'fixedInvestment'|'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'>) {
+  /**
+   * 年化收益率
+   * - 基金折合年化收益率
+   * - 累计年化收益率
+   */
+  get annualizedRate():{
+    fundGrowth: number
+    totalProfit: number
+  } {
+    const len = this.data.length
+    if(len > 0) {
+      const startFund = this.data[0]
+      const endFund = this.data[len - 1]
+      const rangeTime = new Date(endFund.date).getTime() - new Date(startFund.date).getTime()
+      const rangeYear = rangeTime / ONE_DAY / 365
+      
+      return {
+        fundGrowth: roundToFix(Math.pow( 1 + endFund.fundGrowthRate, 1 / rangeYear ) - 1 , 4) ,
+        totalProfit:roundToFix( Math.pow( 1 + endFund.totalProfitRate, 1 / rangeYear ) - 1, 4) ,
+      }
+    } else {
+      return {
+        fundGrowth: 0,
+        totalProfit: 0
+      }
+    }
+  }
+
+  /**
+   * 基金的长期投资计划
+   */
+  constructor(options: Pick<InvestmentStrategy, 'fundJson'|'salary'|'stop'|'tInvest'|'totalAmount'|'indexData'|'shangZhengData'|'onEachDay'>) {
     Object.assign(this, options)
+  }
 
-    
-    
+  /** 
+   * 是否应该定投
+   */
+  private shouldFixedInvest(fixedInvestment: FixedInvestOption['fixedInvestment'], date:any):boolean {
+    const now = new Date(date)
+    if(fixedInvestment.period === 'monthly') {
+      return now.getDate() === fixedInvestment.dateOrWeek
+    } else if(fixedInvestment.period === 'weekly') {
+      return now.getDay() === fixedInvestment.dateOrWeek
+    } else {
+      return false 
+    }
   }
 
   /**
    * 策略定投
    */
-  fixedInvest(range: [string| Date, string| Date]) {
+  fixedInvest(opt: FixedInvestOption) {
+    const {range, fixedInvestment} = opt
+    this.fixedConfig = opt
+    
     // 定投策略
     const beginTime = new Date(range[0]).getTime()
     const endTime = new Date(range[1]).getTime()
-    let tempDate = beginTime
+    if(beginTime > endTime){
+      throw new Error('range[1] should not less than range[0]')
+    }
+    let curDate = beginTime // 中间的日期
 
-    while(tempDate <= endTime) {
-      const dateStr = dateFormat(tempDate)
-      if(!this.data || this.data.length === 0) {
-        let beginFundData: FundDataItem = this.getFundByDate(dateStr)  
+    while(curDate <= endTime) {
+      // 如果还没有数据, 填充初始数据
+      // if(!this.data || this.data.length === 0) {
+      //   this.buy(0, curDate - ONE_DAY)
+      // }  
 
-        this.data.push(new InvestDateSnapshot({
-          fundStrategy: this,
-          cost: beginFundData.val,
-          portion: 0,
-          date: dateStr,
-          leftAmount: this.totalAmount,
-        }))
+      if(this.shouldFixedInvest(fixedInvestment, curDate)){
+        this.buy(fixedInvestment.amount, curDate)
       } else {
-      // const len = this.data.length
-      // let curFundData: FundDataItem = this.fundJson.all[ dateFormat(tempDate) ]
-
-      this.data.push(new InvestDateSnapshot({
-        fundStrategy: this,
-        // cost: curFundData.val,
-        // portion: 0,
-        date: dateStr,
-        // leftAmount: this.totalAmount,
-      }))
+        this.buy(0, curDate)
       }
+
+      this.onEachDay(curDate)
       
-      tempDate += 24 * 60 * 60 * 1000
+      curDate += 24 * 60 * 60 * 1000
+    }
+
+    return this
+  }
+
+  /** 
+   * 获取指定日期的基金快照
+   */
+  private getSnapshotInstance(date:any):InvestDateSnapshot {
+    if(this.dataMap[date]) {
+      return this.dataMap[date]
+    } else {
+      return new InvestDateSnapshot({
+        fundStrategy: this,
+        date: date
+      })
     }
   }
+
+  /**
+   * 数据更新
+   */
+  private pushData(investSnap: InvestDateSnapshot) {
+    this.data.push(investSnap)
+    // 标识 该日期是否已存在实例
+    if(!this.dataMap[investSnap.date]) {
+      this.dataMap[investSnap.date] = investSnap
+    }
+  }
+
 
   /**
    * 买入基金
@@ -122,25 +210,24 @@ export class InvestmentStrategy {
       let latestInvestDate = new Date(this.latestInvestment.date).getTime()
       latestInvestDate += ONE_DAY
       while(cur > latestInvestDate) {
-        const invest = new InvestDateSnapshot({
-          fundStrategy: this,
-          date: dateFormat(latestInvestDate)
-        }).buy(0)
+        
+        const invest = this.getSnapshotInstance(latestInvestDate).buy(0)
         // console.log('date', invest.date, invest)
-
-        this.data.push(invest)
+        this.pushData(invest)
         latestInvestDate += ONE_DAY
       }
     }  
-    const invest = new InvestDateSnapshot({
-      fundStrategy: this,
-      date: dateStr
-    }).buy(amount)
+    const invest = this.getSnapshotInstance(dateStr).buy(amount)
 
-    this.data.push(invest)
+    this.pushData(invest)
     return this
   }
 
+  /**
+   * 赎回基金
+   * @param amount 赎回金额
+   * @param date 日期
+   */
   sell(amount:number|'all', date: any) {
     const dateStr = dateFormat(date)
     let cur = new Date(date).getTime()
@@ -150,38 +237,37 @@ export class InvestmentStrategy {
       let latestInvestDate = new Date(this.latestInvestment.date).getTime()
       latestInvestDate += ONE_DAY
       while(cur > latestInvestDate) {
-        const invest = new InvestDateSnapshot({
-          fundStrategy: this,
-          date: dateFormat(latestInvestDate)
-        }).sell({amount: 0})
-
-        this.data.push(invest)
+        const invest = this.getSnapshotInstance(latestInvestDate).sell({amount: 0})
+        this.pushData(invest)
         latestInvestDate += ONE_DAY
       }
     }  
-    const invest = new InvestDateSnapshot({
-      fundStrategy: this,
-      date: dateStr
-    })
+    const invest = this.getSnapshotInstance(dateStr)
     if(amount === 'all') {
       invest.sell('all')
     } else {
       invest.sell({amount})
     }
 
-    this.data.push(invest)
+    this.pushData(invest)
     return this
   }
 
   /**
    * 根据日期获取对应的基金信息
    */
-  getFundByDate(date: string): FundDataItem {
-    const result = this.fundJson.all[  date ]
+  getFundByDate(date: string, opt?: {
+    origin: Record<string , any>
+  }): FundDataItem {
+    let originData = this.fundJson.all
+    if(opt && opt.origin) {
+      originData = opt.origin
+    }
+    const result = originData[  date ]
     // 如果没有 result， 说明那一天是 非交易日，往更早的日期取值
     if(!result) {
       const previewValidDate = dateFormat( new Date(date).getTime() - 24 * 60 * 60 * 1000)
-      return this.getFundByDate(previewValidDate)
+      return this.getFundByDate(previewValidDate, opt)
     } else {
       return result
     }
@@ -193,6 +279,7 @@ export class InvestmentStrategy {
  * 投资周期中，某一天的持仓快照
  */
 export class InvestDateSnapshot {
+  // 基础数据： cost， portion，totalBuyAmount，totalSellAmount，maxPrincipal，leftAmount，date，curFund，curBonus，dateBuyAmount，dateSellAmount
   /**
    * 基金投资策略
    */
@@ -205,7 +292,7 @@ export class InvestDateSnapshot {
    
 
   /**
-   * 持仓成本金额, 要加上买入费率，手续费也是自己的成本
+   * 持仓成本金额, 已经包括了买入费率，手续费也是自己的成本
    */
   get costAmount():number {
     return roundToFix( this.cost * this.portion , 2 )
@@ -232,6 +319,7 @@ export class InvestDateSnapshot {
   } 
   /** 
    * 持有收益率 = （当前净值 / 成本价）- 1 
+   * 依赖 this.cost
    * */
   get profitRate():number {
     if(this.costAmount === 0) {
@@ -239,11 +327,7 @@ export class InvestDateSnapshot {
     }
     return roundToFix( this.curFund.val / this.cost - 1, 4 ) 
   }
-
-  /**
-   * 赎回了的收益
-   */
-  returnedProfit!: number
+ 
 
   /**
    * 总共买入的金额 
@@ -265,6 +349,9 @@ export class InvestDateSnapshot {
    * 累计收益率
    */
   get totalProfitRate() {
+    if(this.maxPrincipal === 0) {
+      return 0
+    }
     return roundToFix( this.accumulatedProfit / this.maxPrincipal, 4 )
   }
 
@@ -288,21 +375,29 @@ export class InvestDateSnapshot {
     return roundToFix( this.fundAmount - this.totalBuyAmount + this.totalSellAmount, 2)
   }
 
+  /**
+   * 某个区间内累计的最大收益
+   */
+  maxAccumulatedProfit!: {
+    date: string
+    amount: number
+  }
+
 
   
   date: string // 当前日期
 
-  get shouldFixedInvest():boolean {
-    const now = new Date(this.date)
-    const fixedInvestment = this.fundStrategy.fixedInvestment
-    if(fixedInvestment.period === 'monthly') {
-      return now.getDate() === fixedInvestment.dateOrWeek
-    } else if(fixedInvestment.period === 'weekly') {
-      return now.getDay() === fixedInvestment.dateOrWeek
-    } else {
-      return false 
-    }
-  }
+  // get shouldFixedInvest():boolean {
+  //   const now = new Date(this.date)
+  //   const fixedInvestment = this.fundStrategy.fixedInvestment
+  //   if(fixedInvestment.period === 'monthly') {
+  //     return now.getDate() === fixedInvestment.dateOrWeek
+  //   } else if(fixedInvestment.period === 'weekly') {
+  //     return now.getDay() === fixedInvestment.dateOrWeek
+  //   } else {
+  //     return false 
+  //   }
+  // }
 
   /**
    * 当前基金数据
@@ -310,13 +405,62 @@ export class InvestDateSnapshot {
   curFund: FundDataItem 
 
   /**
+   * 获取区间内的分红点
+   * @param start 开始时间
+   * @param end 结束时间
+   */
+  private getBonusBetween(start, end) {
+    const startDate = new Date(start).getTime(),
+          endDate = new Date(end).getTime()
+    const bonus = this.fundStrategy.fundJson.bonus
+    
+    const bonusFundList = Object.values(bonus).reduce((relatedBonus, cur)=>{
+      const curDate = new Date(cur.date).getTime()
+      if( curDate >= startDate && curDate <= endDate) {
+        relatedBonus.push(cur)
+      }
+      return relatedBonus
+    }, [] as FundDataItem[])
+    return bonusFundList
+  }
+
+  curBonus: FundDataItem[] = []
+
+  /**
+   * 是否是分红日
+   */
+  get isBonus():boolean {
+    return Boolean(this.fundStrategy.fundJson.bonus[this.date])
+  }
+
+  /**
    * 基金在区间内的涨幅
    */
   get fundGrowthRate():number {
+    
+
+    // 个时间点到某个时间点之间的 涨幅比较
+    // 普通场景 涨幅： Tb / Ta - 1 
+    // 中间存在 分红点
+    // 多个分红点： 最新净值 / 开始点的净值 * 【(分红点分红后当天涨跌后净值 + 分红值) / 分红点分红后当天涨跌后净值 * (分红点2 + 分红值) / 分红点2 * ...  】  - 1 
     if(this.fundStrategy.data[0]) {
+      const bonus = this.curBonus
       // 起始基金净值
       const firstFundVal = this.fundStrategy.data[0].curFund.val
-      return roundToFix((this.curFund.val - firstFundVal) / firstFundVal, 4)
+      if(bonus.length === 0) {
+        return roundToFix((this.curFund.val - firstFundVal) / firstFundVal, 4)
+      } else {
+        let growWithBonus = bonus.reduce((result, curBonus)=>{
+          if(curBonus.isBonusPortion) {
+            return result * curBonus.bonus
+          } else {
+            return result * (Number(curBonus.val) + Number(curBonus.bonus)) / curBonus.val  
+          }
+          
+        }, this.curFund.val/firstFundVal) - 1
+        return roundToFix(growWithBonus, 4)
+      }
+      
     } else {
       return 0
     }
@@ -344,11 +488,14 @@ export class InvestDateSnapshot {
     // 每天的操作，只需要手动更新：date, cost，portion, leftAmount
     this.date = options.date ? dateFormat(options.date) : dateFormat(Date.now())
     this.fundStrategy = options.fundStrategy!
-    this.curFund = this.fundStrategy.getFundByDate(this.date)
+    try {
+      this.curFund = this.fundStrategy.getFundByDate(this.date)
+    } catch(e) {
+      throw new RangeError('所选时间超出基金运营范围')
+    }
     if(!this.fundStrategy.latestInvestment) {
       this.portion = 0
       this.cost = 0
-      this.returnedProfit = 0
       this.totalBuyAmount = 0
       this.totalSellAmount = 0
       this.leftAmount = this.fundStrategy.totalAmount
@@ -360,31 +507,59 @@ export class InvestDateSnapshot {
       this.leftAmount = latestInvestment.leftAmount
       this.totalBuyAmount = latestInvestment.totalBuyAmount
       this.totalSellAmount = latestInvestment.totalSellAmount
-      this.returnedProfit = latestInvestment.returnedProfit
       this.maxPrincipal = latestInvestment.maxPrincipal
+      this.curBonus = this.getBonusBetween(this.fundStrategy.data[0].date, this.date)
     }
 
     this.operate()
+    this.calcMaxAccumulatedProfit()
+  }
+
+  /**
+   * 计算累计的历史最大收益
+   */
+  private calcMaxAccumulatedProfit() {
+    const curMaxProfit = {
+      date: this.date,
+      amount: this.accumulatedProfit
+    }
+    const previousInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1] 
+
+    if(previousInvestment && previousInvestment.maxAccumulatedProfit) {
+      // 比较当前最大，和上一次比较最大值
+      this.maxAccumulatedProfit = previousInvestment.maxAccumulatedProfit.amount > curMaxProfit.amount ? previousInvestment.maxAccumulatedProfit : curMaxProfit
+    } else {
+      // 如果是第一个值，初始化
+      this.maxAccumulatedProfit = curMaxProfit
+    }
   }
 
   /**
    * 该日期基金操作行为
    */
-  operate() {
+  private operate() {
     this.income()
-    // TODO: 
     // 分红日？重新计算 成本和 份额。【分红后，收益不变，净值变低。 所以 持仓成本 = 分红后净值/ （profitRate+1）】【份额 = fundAmount / 分红后净值】
-    
+    if(this.isBonus) {
+      if(this.curFund.isBonusPortion) {
+        this.cost = this.cost / this.curFund.bonus
+        this.portion = this.portion * this.curFund.bonus
+      } else {
+        this.cost = this.cost * this.curFund.val / (Number(this.curFund.val) + Number(this.curFund.bonus)) 
+        this.portion = this.portion * (Number(this.curFund.val) + Number(this.curFund.bonus)) / this.curFund.val
+      }
+      
+    }
     // 定投日? 买入定投金额
     // if(this.shouldFixedInvest) {
     //   this.buy(this.fundStrategy.fixedInvestment.amount)
     // }
     
-    // TODO: 触发补仓？
+    //  触发补仓？
 
-    // TODO: 触发止盈？
+    //  触发止盈？
 
-    // TODO: 触发卖出补仓份额？
+    //  触发卖出补仓份额？
 
     
 
@@ -419,7 +594,6 @@ export class InvestDateSnapshot {
     const salaryDate = 1
     // 发薪日
     if(new Date(this.date).getDate() === salaryDate) {
-      
       this.leftAmount +=  this.fundStrategy.salary
     }  
   }
@@ -469,11 +643,12 @@ export class InvestDateSnapshot {
    * @param amount 金额
    */
   buy(amount:number) {
+    // 分红日不允许买卖
+    if(this.isBonus) {
+      return this
+    }
     // amount 是掏出的钱
     // buyTxn.amount 是除去 手续费后，确切买入基金的金额， 两者差价为买入手续费
-    // if(amount > 0) {
-    //   debugger
-    // }
     if(amount <= 0) {
       return this
     }
@@ -484,20 +659,22 @@ export class InvestDateSnapshot {
       amount
     })
     // 上一次快照
-    const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
-      portion : 0,
-      cost: 0,
-      costAmount: 0,
-      leftAmount: this.fundStrategy.totalAmount
-    }
+    // const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
+    //   portion : 0,
+    //   cost: 0,
+    //   costAmount: 0,
+    //   leftAmount: this.leftAmount
+    // }
+
+    const tempCostAmount = this.costAmount
     // 最新份额 = 上一次的 份额，加最新买入的份额
-    this.portion = latestInvestment.portion + buyTxn.portion
+    this.portion = this.portion + buyTxn.portion
 
     // 买入行为后，持仓成本 = (之前持仓成本金额 + 买入金额) / 基金总份额
-    this.cost = roundToFix( (latestInvestment.costAmount + amount)  / this.portion , 4)
+    this.cost = roundToFix( (tempCostAmount + amount)  / this.portion , 4)
 
     // 买入后从剩余资金扣除
-    this.leftAmount = roundToFix(latestInvestment.leftAmount - amount, 2) 
+    this.leftAmount = roundToFix(this.leftAmount - amount, 2) 
     
     this.calcMaxPrincipal()
     return this
@@ -507,18 +684,22 @@ export class InvestDateSnapshot {
    * @param txn 卖出信息
    */
   sell(txn:Partial<FundTransaction>|'all') {
-    
-    // 上一次快照， 
-    const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
-      portion : 0,
-      cost: 0,
-      costAmount: 0,
-      leftAmount: this.fundStrategy.totalAmount
+    // 分红日不允许买卖
+    if(this.isBonus) {
+      return this
     }
+
+    // 上一次快照， 
+    // const latestInvestment = this.fundStrategy.data[this.fundStrategy.data.length - 1]  || {
+    //   portion : 0,
+    //   cost: 0,
+    //   costAmount: 0,
+    //   leftAmount: this.fundStrategy.totalAmount
+    // }
 
     if(txn === 'all') {
       txn = {
-        portion: latestInvestment.portion
+        portion: this.portion
       }
     }
 
@@ -529,20 +710,21 @@ export class InvestDateSnapshot {
     // 此时的 this.fundStrategy.latestInvestment 其实就是 this, 因为 sell() 执行前， latestInvestment 就已经被赋值了
     
 
-    // 最新份额 = 上一次的 份额 - 最新卖出的份额
-    this.portion = latestInvestment.portion - sellTxn.portion
-    if(this.portion < 0) {
-      throw new TypeError('卖出份额不能比持有份额高')
+    if(this.portion - sellTxn.portion < 0) {
+      console.error('卖出份额不能比持有份额高, 跳过本次卖出')
     }
+    // 最新份额 = 上一次的 份额 - 最新卖出的份额
+    this.portion = this.portion - sellTxn.portion
+    
 
     // 卖出行为后，持仓成本 = (之前持仓成本金额 - 卖出金额) / 基金总份额
     // this.cost = (latestInvestment.costAmount - sellTxn.amount)  / this.portion
-    this.cost = latestInvestment.cost
     // 算法参考 https://www.zhihu.com/question/265056524
-    this.returnedProfit = latestInvestment.returnedProfit +  sellTxn.amount / (1/this.profitRate + 1)
+    
+    // this.returnedProfit = latestInvestment.returnedProfit +  sellTxn.amount / (1/this.profitRate + 1)
 
     // 卖出后加到 剩余资产中
-    this.leftAmount = roundToFix( latestInvestment.leftAmount + sellTxn.amount, 2 )
+    this.leftAmount = roundToFix( this.leftAmount + sellTxn.amount, 2 )
     
     this.totalSellAmount = roundToFix( this.totalSellAmount + sellTxn.amount, 2)
     this.dateSellAmount = roundToFix(this.dateSellAmount + sellTxn.amount, 2) 
@@ -552,33 +734,23 @@ export class InvestDateSnapshot {
 
 }
 
-// TODO: 某个时间点到某个时间点之间的 涨幅比较
-// 普通场景 涨幅： Tb / Ta - 1 
-// 中间存在 分红点： Tb / fh * (fh + 派送金额) / Ta - 1 
 
 
-// const ist = new InvestmentStrategy({
-//   // fundJson: FundDataJson as FundJson,
-//   range: ['2018-01-01', '2019-12-01'],
-//   totalAmount: 100000,
-//   salary: 10000,
-//   fixedInvestment: {
-//     amount: 300,
-//     period: 'weekly',
-//     dateOrWeek: 4,
-//   },
-//   // buyFeeRate: 0.0015,
-//   // sellFeeRate: 0.005,
-//   stop: {
-//     rate: 0.05,
-//     minAmount: 50000,
-//   },
-
-//   tInvest: {
-//     rate: 0.05,
-//     amount: 1000
-//   },
-//   fundJson: FundDataJson as any as FundJson
-// })
-
-// console.log('ist', ist)
+// 买卖
+// investment
+    //   .buy(0, '2018-12-26')
+    //   .buy(5000, '2018-12-27')
+    //   .sell('all', '2019-03-01')
+    //   .buy(5000, '2019-08-01')
+    //   .sell(2000, '2019-09-01')
+    //   .buy(5000, '2019-12-01')
+    
+    // 定投
+    // investment.fixedInvest({
+    //   fixedInvestment: {
+    //     period: 'weekly',
+    //     amount: 1200,
+    //     dateOrWeek: 4
+    //   },
+    //   range: ['2019-01-01','2019-12-01']
+    // })

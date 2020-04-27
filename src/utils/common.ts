@@ -1,4 +1,5 @@
-import lodash from 'lodash'
+
+
 
 
 export const dateFormat = (dateInput, format = 'yyyy-MM-dd'):string => {
@@ -56,3 +57,50 @@ export const roundToFix = (num: number|string, fractionDigits: number = 2):numbe
   const powNum = Math.pow(10, fractionDigits)
   return Number((Math.round(Number(num) * powNum) / powNum).toFixed(fractionDigits))
 }
+
+/**
+ * 不允许选未来的日期
+ */
+export const disabledFuture = (date) => {
+  const selectDate = new Date(date).getTime()
+  const now = Date.now()
+  return selectDate > now
+}
+
+/**
+ * 格式化成百分比字符串
+ */
+export const formatPercentVal = (val: number) => {
+  return roundToFix(val * 100) + '%' 
+}
+
+/** 
+ * jsonp 获取数据 
+ * */
+window['getJSONP'] = (url: string,callback: Function) => {
+  var cbnum = "cb" + window['getJSONP'].counter++;
+  var cbname = "getJSONP." + cbnum;
+
+  if (url.indexOf("?") == -1) {
+     url += "?callback=" + cbname;
+     url += "?cb=" + cbname;
+  } else {
+     url += "&callback=" + cbname;
+     url += "&cb=" + cbname;
+  }
+
+  var script = document.createElement("script");
+  window['getJSONP'][cbnum] = function (response) {
+     try {
+        callback(response);
+     }
+     finally {
+        delete window['getJSONP'][cbnum];
+        script.parentNode!.removeChild(script);
+     }
+  };
+
+  script.src = url;
+  document.body.appendChild(script);
+}
+window['getJSONP'].counter = 0;
