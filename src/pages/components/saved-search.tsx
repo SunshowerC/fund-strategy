@@ -26,7 +26,15 @@ export type StorageSearch = Record<string, FundFormObj>
 const tagColors = ["magenta","red","volcano","orange","gold","lime","green","cyan","blue","geekblue","purple"]
 
 const SAVED_FORM_KEY = 'saved-fund-form'
+
 let allSavedConditionStr = localStorage.getItem(SAVED_FORM_KEY) || '{}'
+if(allSavedConditionStr === '{}') {
+  allSavedConditionStr = JSON.stringify({
+    '定投白酒不止盈': {"fundId":"161725","dateRange":["2017-04-28T00:00:00.000Z","2020-04-27T16:00:00.000Z"],"totalAmount":10000,"salary":10000,"purchasedFundAmount":0,"fixedAmount":2000,"period":["weekly",4],"shCompositeIndex":3000,"fundPosition":100,"profitRate":5,"sellAtTop":false,"sellNum":10,"sellUnit":"fundPercent","referIndex":"1.000001","buyAmountPercent":20},
+    '定投白酒止盈': {"fundId":"161725","dateRange":["2017-04-28T00:00:00.000Z","2020-04-27T16:00:00.000Z"],"totalAmount":10000,"salary":10000,"purchasedFundAmount":0,"fixedAmount":2000,"period":["weekly",4],"shCompositeIndex":3000,"fundPosition":70,"profitRate":10,"sellAtTop":true,"sellNum":10,"sellUnit":"fundPercent","referIndex":"1.000001","buyAmountPercent":20},
+  })
+}
+
 export const allSavedCondition = JSON.parse(allSavedConditionStr) as StorageSearch
 
 export class SavedSearchCondition extends Component<SavedSearchProp, SavedSearchCondition["state"]> {
