@@ -5,6 +5,7 @@ import React, { Component, Fragment } from 'react';
 import {Button, Popover, Tag, Modal, Input} from 'antd';
 import { FundFormObj } from './search-form';
 import { WrappedFormUtils } from 'antd/lib/form/Form';
+import { dateFormat } from  '@/utils/common'
 
 interface SavedSearchProp {
   /**
@@ -29,9 +30,12 @@ const SAVED_FORM_KEY = 'saved-fund-form'
 
 let allSavedConditionStr = localStorage.getItem(SAVED_FORM_KEY) || '{}'
 if(allSavedConditionStr === '{}') {
+  const curDateStr = dateFormat(Date.now(), 'yyyy-MM-dd')
+  const oldDateStr = dateFormat(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000, 'yyyy-MM-dd')
+
   allSavedConditionStr = JSON.stringify({
-    '定投白酒不止盈': {"fundId":"161725","dateRange":["2017-04-28T00:00:00.000Z","2020-04-27T16:00:00.000Z"],"totalAmount":10000,"salary":10000,"purchasedFundAmount":0,"fixedAmount":2000,"period":["weekly",4],"shCompositeIndex":3000,"fundPosition":100,"profitRate":5,"sellAtTop":false,"sellNum":10,"sellUnit":"fundPercent","referIndex":"1.000001","buyAmountPercent":20},
-    '定投白酒止盈': {"fundId":"161725","dateRange":["2017-04-28T00:00:00.000Z","2020-04-27T16:00:00.000Z"],"totalAmount":10000,"salary":10000,"purchasedFundAmount":0,"fixedAmount":2000,"period":["weekly",4],"shCompositeIndex":3000,"fundPosition":70,"profitRate":10,"sellAtTop":true,"sellNum":10,"sellUnit":"fundPercent","referIndex":"1.000001","buyAmountPercent":20},
+    '定投白酒不止盈': {"fundId":"161725","dateRange":[`${oldDateStr}T00:00:00.000Z`,`${curDateStr}T16:00:00.000Z`],"totalAmount":10000,"salary":10000,"purchasedFundAmount":0,"fixedAmount":2000,"period":["weekly",4],"shCompositeIndex":3000,"fundPosition":100,"profitRate":5,"sellAtTop":false,"sellNum":10,"sellUnit":"fundPercent","referIndex":"1.000001","buyAmountPercent":20},
+    '定投白酒止盈': {"fundId":"161725","dateRange":[`${oldDateStr}T00:00:00.000Z`,`${curDateStr}T16:00:00.000Z`],"totalAmount":10000,"salary":10000,"purchasedFundAmount":0,"fixedAmount":2000,"period":["weekly",4],"shCompositeIndex":3000,"fundPosition":70,"profitRate":10,"sellAtTop":true,"sellNum":10,"sellUnit":"fundPercent","referIndex":"1.000001","buyAmountPercent":20},
   })
 }
 
