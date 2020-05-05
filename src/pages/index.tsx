@@ -26,7 +26,7 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
   getFundData = async (formData: FundFormObj) => {
     console.log('基金表单参数', formData)
     formData.referIndex = formData.referIndex || IndexFund.ShangZheng
-    
+
     const [result, szData, referIndexData] = await Promise.all([
       getFundData(formData.fundId, formData.dateRange),
       getIndexFundData({
@@ -42,7 +42,6 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
     txnByMacd(Object.values(referIndexData), formData.sellMacdPoint/100, formData.buyMacdPoint / 100)
 
 
-    // console.log('result', result)
     const startDate = new Date( Object.keys(result.all).pop()! )
     if(startDate.getTime() > new Date(formData.dateRange[0]).getTime()) {
       formData.dateRange[0] = moment(startDate)
@@ -132,7 +131,6 @@ export default class App extends Component<{}, {fundData: InvestDateSnapshot[]}>
           // 补仓金额, 如果 formData.buyAmountPercent 数字小于 100，数字代表 比例，否则代表 金额
           const buyAmount = formData.buyAmountPercent <= 100 ? Math.round(latestInvestment.leftAmount * formData.buyAmountPercent / 100) : formData.buyAmountPercent
           // console.log('补仓点', dateStr, buyAmount) 
-          // TODO: 补仓策略 买入的基金，只有持有收益 > 5% 才能卖
           this.buy(buyAmount, dateStr)
          
         }

@@ -23,8 +23,8 @@ interface ThresholdItem {
 export interface FundDataItem {
   date: string
   val: number
-  accumulatedVal: number
-  growthRate: number
+  // accumulatedVal: number
+  // growthRate: number
   bonus: number
   isBonusPortion?: boolean // FHSP: "每份基金份额折算1.020420194份"
 
@@ -55,50 +55,64 @@ export const getFundData = async (fundCode: string | number, size: number | [any
     pageSize = size
   }
 
-  const path = `http://api.fund.eastmoney.com/f10/lsjz?fundCode=${fundCode}&pageIndex=${page}&pageSize=${Math.floor(pageSize)}&startDate=${startDate}&endDate=${endDate}&_=${Date.now()}`
-
+  // const path = `http://api.fund.eastmoney.com/f10/lsjz?fundCode=${fundCode}&pageIndex=${page}&pageSize=${Math.floor(pageSize)}&startDate=${startDate}&endDate=${endDate}&_=${Date.now()}`
+  const path = `http://fund.eastmoney.com/pingzhongdata/${fundCode}.js?v=${dateFormat(new Date(), 'yyyyMMddHHmmss')}`
+  
   return new Promise((resolve) => {
     getJSONP(path, (resp) => {
-      let json = resp
-      const historyVal = json.Data.LSJZList // 历史净值
-      // 日期    FSRQ，  date
-      // 单位净值 DWJZ，  val
-      // 累计净值 LJJX，  accumulatedVal
-      // 日增长率 JZZZL   growthRate
-      // 分红送配 FHFCZ  bonus
-      // FHSP: "每份基金份额折算1.020420194份"
-
-      let previousItem
-      const formatResult = historyVal.reduce((result, item) => {
-        const curFundObj: FundDataItem = {
-          date: item.FSRQ,
-          val: item.DWJZ,
-          accumulatedVal: item.LJJZ,
-          growthRate: item.JZZZL,
-          bonus: item.FHFCZ
+    }, {
+      onload: ()=>{
+        let historyVal: any[] = window['Data_netWorthTrend'] || [] // 历史净值
+        // 日期    x  date
+        // 单位净值 y  val
+        // 分红送配 unitMoney  bonus
+        
+        if(historyVal.length === 0) {
+          console.error('查询基金净值失败', historyVal)
+    
+          throw new Error('查询基金净值失败')
         }
-
-        result.all[curFundObj.date] = curFundObj
-
-        if (curFundObj.bonus) {
-          result.bonus[curFundObj.date] = curFundObj
-
-          // 分红分为 分红派送，以及份额折算两种
-          if ((item.FHSP as string).startsWith('每份基金份额折算')) {
-            curFundObj.isBonusPortion = true
-            // curFundObj.bonus = previousItem.val * (1 + curFundObj.growthRate / 100) * (1 - 1 / curFundObj.bonus)
+        console.log('hislen', historyVal.length)
+        historyVal = historyVal.slice(-pageSize)
+        console.log('historyVal ', historyVal)
+    
+        let previousItem
+        /**
+         * @important 基金数据必须是以时间倒序排序
+         */
+        const formatResult = historyVal.reverse().reduce((result, item) => {
+          const curFundObj: FundDataItem = {
+            date: dateFormat(item.x, 'yyyy-MM-dd') ,
+            val: item.y,
+            // accumulatedVal: item.LJJZ,
+            // growthRate: item.JZZZL,
+            bonus: item.unitMoney // 值为以下两种可能：拆分：每份基金份额折算1.018012713份； 分红：每份基金分红0.1元
           }
-        }
-
-        previousItem = curFundObj
-
-        return result
-      }, {
-        bonus: {},
-        all: {}
-      })
-
-      resolve(formatResult)
+    
+          result.all[curFundObj.date] = curFundObj
+    
+          if (curFundObj.bonus) {
+            const matchResult = curFundObj.bonus.toString().match(/\d+.?\d+/)
+            curFundObj.bonus = matchResult ? Number(matchResult[0]) : 0
+    
+            result.bonus[curFundObj.date] = curFundObj
+    
+            // 分红分为 分红派送，以及份额折算两种
+            if ((item.unitMoney as string).startsWith('拆分')) {
+              curFundObj.isBonusPortion = true
+            }  
+          }
+    
+          previousItem = curFundObj
+    
+          return result
+        }, {
+          bonus: {},
+          all: {}
+        })
+        console.log('formatResult', formatResult)
+        resolve(formatResult)
+      }
     })
 
   })
@@ -435,8 +449,12 @@ export const getIndexFundData = async (opt: {
       localStorage.setItem(opt.code, JSON.stringify(mergedData))
 
       const rangedData = {}
+      // 开始时间提前 10 天，以免找不到数据
+      const minDate = new Date(opt.range[0]).getTime() - 10 * 24 * 3600 * 1000
+      
+      // 过滤出时间区间内的数据 
       for(let date in mergedData) {
-        if(date >= dateFormat(opt.range[0]) && date <= dateFormat(opt.range[1])) {
+        if(date >= dateFormat(minDate) && date <= dateFormat(opt.range[1])) {
           rangedData[date] = mergedData[date]
         }
       }
