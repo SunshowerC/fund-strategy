@@ -77,7 +77,9 @@ export const formatPercentVal = (val: number) => {
 /** 
  * jsonp 获取数据 
  * */
-window['getJSONP'] = (url: string,callback: Function) => {
+window['getJSONP'] = (url: string,callback: Function, opt?:{
+  onload?: Function
+}) => {
   var cbnum = "cb" + window['getJSONP'].counter++;
   var cbname = "getJSONP." + cbnum;
 
@@ -90,6 +92,7 @@ window['getJSONP'] = (url: string,callback: Function) => {
   }
 
   var script = document.createElement("script");
+  script.referrerPolicy = "no-referrer"
   window['getJSONP'][cbnum] = function (response) {
      try {
         callback(response);
@@ -100,7 +103,13 @@ window['getJSONP'] = (url: string,callback: Function) => {
      }
   };
 
-  script.src = url;
+  script.src = url
+  if(opt && opt.onload) {
+    script.onload = ()=>{
+      opt.onload!()
+    }
+  }
+  
   document.body.appendChild(script);
 }
 window['getJSONP'].counter = 0;

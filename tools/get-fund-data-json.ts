@@ -6,8 +6,8 @@ import {resolve} from 'path'
 export interface FundDataItem {
   date: string
   val: number
-  accumulatedVal: number
-  growthRate: number
+  // accumulatedVal: number
+  // growthRate: number
   bonus: number
 }
 
@@ -49,8 +49,8 @@ const getFundData = async (fundCode: string|number, size?: number):Promise<FundJ
     const curFundObj: FundDataItem = {
       date: item.FSRQ,
       val: item.DWJZ,
-      accumulatedVal: item.LJJZ,
-      growthRate: item.JZZZL,
+      // accumulatedVal: item.LJJZ,
+      // growthRate: item.JZZZL,
       bonus: item.FHFCZ
     }
     result.all[curFundObj.date] = curFundObj
