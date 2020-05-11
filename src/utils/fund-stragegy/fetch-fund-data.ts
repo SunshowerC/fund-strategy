@@ -1,6 +1,5 @@
 
-import axios from 'axios'
-import { notification } from 'antd'
+
 import { dateFormat, roundToFix } from '../common'
 
 // TODO: 使用 fetch-jsonp

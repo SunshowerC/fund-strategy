@@ -1,7 +1,14 @@
 
 
 import React, {Component} from 'react'
-import { Form, Card, Checkbox, Row, Col, DatePicker, Button } from 'antd';
+import Form from 'antd/es/form';
+import Card from 'antd/es/card'
+import Checkbox from 'antd/es/checkbox'
+import Row from 'antd/es/row'
+import Col from 'antd/es/col'
+import DatePicker from 'antd/es/date-picker'
+import Button from 'antd/es/button'
+
 import { FormComponentProps } from 'antd/lib/form';
 import { allSavedCondition } from '../components/saved-search';
 import moment from 'moment'

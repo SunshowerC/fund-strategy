@@ -5,7 +5,7 @@ import { SearchForm, FundFormObj } from './components/search-form'
 import 'antd/dist/antd.css'
 import { getFundData, FundJson, getIndexFundData, IndexFund, calcMACD, IndexData, txnByMacd } from '@/utils/fund-stragegy/fetch-fund-data';
 import { InvestmentStrategy, InvestDateSnapshot } from '@/utils/fund-stragegy';
-import { notification } from 'antd';
+import  notification  from 'antd/es/notification';
 import moment from 'moment'
 // 动态查询实时上证指数数据
 // import shangZhengData from '../utils/fund-stragegy/static/shanghai.json'

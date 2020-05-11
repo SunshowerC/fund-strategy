@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './index.css';
-import { Button } from 'antd'
+import Button from 'antd/es/button'
 const BasicLayout: React.FC = props => {
 
   return (

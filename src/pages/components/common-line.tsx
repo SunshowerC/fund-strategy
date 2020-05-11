@@ -2,24 +2,13 @@ import { Component } from "react";
 import { AmountProp } from './total-amount';
 
 import {
-  G2,
   Chart,
   Geom,
   Axis,
   Tooltip,
-  Coord,
-  Label,
   Legend,
-  View,
-  Guide,
-  Shape,
-  Facet,
-  Util,
-  ChartProps
 } from "bizcharts";
 import React from 'react';
-import { COLOR_PLATE_16 } from '@/utils/color';
-import { InvestDateSnapshot } from '@/utils/fund-stragegy';
 
 export interface CommonFundLineProp extends AmountProp {
   title?: string

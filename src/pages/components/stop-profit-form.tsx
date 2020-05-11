@@ -1,9 +1,14 @@
 import React, { Component, Fragment } from 'react';
 import { FundFormObj } from './search-form';
 import Form, { FormComponentProps } from 'antd/lib/form';
-import { Divider, InputNumber, Switch, Select, Row, Col } from 'antd';
-import { IndexData, searchIndex, SearchIndexResp } from '@/utils/fund-stragegy/fetch-fund-data';
-import {throttle} from 'lodash'
+import Divider from 'antd/es/divider'
+import InputNumber from 'antd/es/input-number'
+import Switch from 'antd/es/switch'
+import Select from 'antd/es/select'
+import Row from 'antd/es/row'
+import Col from 'antd/es/col'
+import { searchIndex, SearchIndexResp } from '@/utils/fund-stragegy/fetch-fund-data';
+import throttle from 'lodash/throttle'
 
 
 const { Option } = Select

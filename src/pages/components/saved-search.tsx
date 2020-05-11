@@ -2,7 +2,11 @@
 
 import React, { Component, Fragment } from 'react';
 
-import {Button, Popover, Tag, Modal, Input} from 'antd';
+import Input from 'antd/es/input';
+import Modal from 'antd/es/modal';
+import Tag from 'antd/es/tag';
+import Popover from 'antd/es/popover';
+import Button from 'antd/es/button';
 import { FundFormObj } from './search-form';
 import { WrappedFormUtils } from 'antd/lib/form/Form';
 import { dateFormat } from  '@/utils/common'

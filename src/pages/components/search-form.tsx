@@ -1,5 +1,15 @@
-import React, { Component, Fragment } from 'react';
-import { Form, DatePicker, TimePicker, Button, Input, Card, Select, InputNumber, Cascader, Divider, Modal, Row, Col } from 'antd';
+import React, { Component } from 'react';
+import Form from 'antd/es/form';
+import DatePicker from 'antd/es/date-picker';
+import Button from 'antd/es/button';
+import Card from 'antd/es/card';
+import Select from 'antd/es/select';
+import InputNumber from 'antd/es/input-number';
+import Cascader from 'antd/es/cascader';
+import Divider from 'antd/es/divider';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
+
 import { WrappedFormUtils, FormComponentProps, GetFieldDecoratorOptions } from 'antd/lib/form/Form';
 import moment from 'moment';
 import { dateFormat } from '@/utils/common';
@@ -8,7 +18,7 @@ import styles from '../index.css';
 import { StopProfitForm } from './stop-profit-form';
 import { BuyStragegyForm } from './buy-stragegy-form'
 import { SavedSearchCondition } from './saved-search'
-import { throttle } from 'lodash'
+import throttle from 'lodash/throttle'
 
 const { MonthPicker, RangePicker } = DatePicker;
 const { Option } = Select
