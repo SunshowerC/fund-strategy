@@ -112,7 +112,8 @@ export class SavedSearchCondition extends Component<SavedSearchProp, SavedSearch
       {
         Object.keys(allSavedCondition).map((name,index) => {
           return <Tag closable key={index} style={{
-            marginBottom: 10
+            marginBottom: 10,
+            cursor: 'pointer'
           }} color={tagColors[index%tagColors.length]} 
             onClose={(e)=>this.deleteCondition(e, name)}
             onClick={()=>this.handleSelectedTag(name, allSavedCondition[name])}
@@ -127,7 +128,11 @@ export class SavedSearchCondition extends Component<SavedSearchProp, SavedSearch
     return <Fragment>
       <Button type="default" onClick={this.saveSearchForm} style={{marginRight: 10}}>保存</Button>
 
-      <Popover placement="bottomRight" content={this.content()} title="已保存的基金策略" trigger="hover">
+      <Popover 
+        trigger="click"
+        placement="bottomRight" content={this.content()} 
+        title="已保存的基金策略"
+      >
         <Button type="primary">我的保存项</Button>
       </Popover>
     </Fragment>
