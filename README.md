@@ -54,9 +54,16 @@ npm start
 3. 【可选】设置止盈策略
 4. 【可选】设置补仓策略
 5. 点击查询 
-![image](https://user-images.githubusercontent.com/13402013/100249335-678f7280-2f77-11eb-8fd7-ff2f483f6566.png)
+![image](https://user-images.githubusercontent.com/13402013/100250664-dfaa6800-2f78-11eb-936d-cc1acdad9c66.png)
 
-### 保存搜索条件
+ 
+### 策略对比
+1. 保存两条及以上搜索条件
+2. 点击策略对比
+  ![image](https://user-images.githubusercontent.com/13402013/100251039-462f8600-2f79-11eb-93ed-45725c1da70f.png)
+
+3. 将打开[策略对比页](http://sunshowerc.github.io/fund/#/compare), 勾选需要对比的策略条件，查询得到结果
+  ![image](https://user-images.githubusercontent.com/13402013/100251436-bb9b5680-2f79-11eb-9ca3-51155368fee6.png)
 
 
 ## 感谢
