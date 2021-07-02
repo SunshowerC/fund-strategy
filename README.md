@@ -34,7 +34,8 @@
 
 > 基于这个模型，也可以简单拓展成股票的交易模型，不过基于本人对炒股不是很熟，所以大家有兴趣的可以自行 fork 改造。
 
-## 安装
+## 安装与运行
+### 方式一
 需要 node 开发环境
 - npm
 - node
@@ -42,11 +43,30 @@
 ```
 npm install
 ```
-
-## 开发
+运行命令
 ```
 npm start
 ```
+
+### 方式二
+使用docker运行项目
+
+在项目路径下运行以下命令构建项目的docker镜像
+```
+docker build -t fund_strategy .
+```
+
+镜像构建完毕后运行
+```
+docker run -dp 8000:8000 fund_strategy --name="fund_strategy_instance"
+```
+
+等待项目启动过程中，可通过以下命令查看启动日志：
+```
+docker log -f fund_strategy_instance
+```
+
+启动后，可通过`http://locahost:8000`访问网页
 
 ## 使用说明
 这是个开源的静态 web 仓库，无任何其他依赖。
